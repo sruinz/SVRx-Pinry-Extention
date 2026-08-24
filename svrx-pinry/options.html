@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <title>SVRx Pinry 설정</title>
+    <style>
+      body { font-family: sans-serif; max-width: 42rem; margin: 2rem; }
+      label { display: block; margin: 1rem 0; }
+      input[type="text"], input[type="password"] { box-sizing: border-box; width: 100%; }
+      .notice { color: #555; }
+      .field-error { color: #b42318; display: block; min-height: 1.25em; margin: 0.25rem 0 0; }
+      .danger { color: #b42318; }
+      .delete-confirmation { border: 1px solid #b42318; margin-top: 1rem; padding: 1rem; }
+      #status { min-height: 1.5em; }
+    </style>
+  </head>
+  <body>
+    <h1>SVRx Pinry 서버</h1>
+    <section id="serverState" aria-live="polite">
+      <h2>연결 상태</h2>
+      <p id="serverConnectionStatus">상태 확인 중</p>
+      <p id="serverOrigin"></p>
+      <p id="serverUsername"></p>
+      <p id="serverPermission"></p>
+      <p id="serverTokenState"></p>
+      <button type="button" id="revalidateServer">연결 상태 다시 확인</button>
+    </section>
+    <form id="serverForm">
+      <label>
+        서버 주소
+        <input type="text" id="pinryUrl" placeholder="https://pinry.example" required />
+        <span id="pinryUrlError" class="field-error" aria-live="polite"></span>
+      </label>
+      <label>
+        API token
+        <input type="password" id="pinryToken" autocomplete="new-password" />
+        <span id="pinryTokenError" class="field-error" aria-live="polite"></span>
+      </label>
+      <label>
+        <input type="checkbox" id="allowInsecureHttp" />
+        HTTP를 사용하면 token이 암호화되지 않은 채 전송됨을 이해하고 동의합니다.
+      </label>
+      <button type="submit" id="saveServerSettings" disabled>저장 및 인증</button>
+      <button
+        type="button"
+        id="deleteCredentials"
+        aria-controls="deleteCredentialsConfirmation"
+        aria-expanded="false"
+        class="danger"
+      >인증 정보 삭제</button>
+      <section
+        id="deleteCredentialsConfirmation"
+        role="alertdialog"
+        aria-labelledby="deleteCredentialsQuestion"
+        hidden
+        class="delete-confirmation"
+      >
+        <p id="deleteCredentialsQuestion"></p>
+        <button type="button" id="confirmDeleteCredentials" class="danger">삭제</button>
+        <button type="button" id="cancelDeleteCredentials">취소</button>
+      </section>
+    </form>
+    <p class="notice">
+      확장 프로그램의 storage.local은 운영체제 비밀 저장소가 아닙니다.
+      해당 브라우저 프로필을 보호하세요.
+    </p>
+    <p id="status" tabindex="-1" aria-live="polite"></p>
+    <label>
+      <input type="checkbox" id="contextMenu" />
+      마우스 오른쪽 버튼 메뉴에 SVRx Pinry 추가 표시
+    </label>
+    <script src="origin.js"></script>
+    <script src="options.js"></script>
+  </body>
+</html>
