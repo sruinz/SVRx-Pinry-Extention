@@ -11,6 +11,10 @@
 
 SVRx Pinry는 현재 페이지에서 이미지를 골라 사용자가 설정한 SVRx Pinry 서버에 Pin으로 저장하는 브라우저 확장입니다.
 
+[서버 저장소와 설치 안내](https://github.com/sruinz/SVRx-Pinry) · [확장 프로그램 저장소](https://github.com/sruinz/SVRx-Pinry-Extention)
+
+이미지와 계정을 관리하는 서버를 먼저 설치한 뒤 이 확장 프로그램을 연결하세요.
+
 ## 화면 미리보기
 
 ![현재 페이지 이미지 선택 및 일괄 Pin 생성 화면](assets/screenshot-01-image-selection-1280x800.png)
