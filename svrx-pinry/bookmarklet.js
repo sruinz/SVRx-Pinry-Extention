@@ -1,11 +1,17 @@
 (function exposeBookmarklet(root, factory) {
-  const api = factory();
+  let i18nApi = root.PinryI18n;
+  if (!i18nApi && typeof module === 'object' && module.exports) {
+    i18nApi = require('./i18n.js');
+  }
+  if (!i18nApi) throw new Error('i18n_module_unavailable');
+  const api = factory(i18nApi);
   root.PinryBookmarklet = api;
   if (typeof module === 'object' && module.exports) module.exports = api;
-}(globalThis, function buildBookmarkletApi() {
+}(globalThis, function buildBookmarkletApi(i18nApi) {
   'use strict';
 
   const OVERLAY_ID = 'pinry-images';
+  const t = (key, substitutions, fallback) => i18nApi.message(key, substitutions, fallback);
 
   function createButton(documentObject, text, className) {
     const button = documentObject.createElement('button');
@@ -76,97 +82,98 @@
   }
 
   const ITEM_STATUS_LABELS = Object.freeze({
-    pending: '처리 대기',
-    created: '생성 완료',
-    replayed: '생성 완료',
-    failed: '생성 실패',
-    conflict: '처리 충돌',
-    unknown: '상태 확인 필요',
+    pending: t('itemStatusPending', undefined, 'Pending'),
+    created: t('itemStatusCreated', undefined, 'Created'),
+    replayed: t('itemStatusReplayed', undefined, 'Created'),
+    failed: t('itemStatusFailed', undefined, 'Creation failed'),
+    conflict: t('itemStatusConflict', undefined, 'Processing conflict'),
+    unknown: t('itemStatusUnknown', undefined, 'Status check needed'),
   });
 
   const USER_MESSAGE_BY_CODE = Object.freeze({
-    creating: 'Pin을 만드는 중입니다.',
-    discarded: '작업을 버렸습니다.',
-    network_error: '서버에 연결하지 못했습니다.',
-    temporary_server_error: '서버에 일시적인 문제가 발생했습니다.',
-    invalid_server_response: '서버 응답을 확인하지 못했습니다.',
-    invalid_sender: '요청을 보낸 페이지를 확인하지 못했습니다.',
-    invalid_server_configuration: 'Pinry 서버 설정을 확인해 주세요.',
-    server_configuration_changed: 'Pinry 서버 설정이 변경되었습니다.',
-    server_not_configured: 'Pinry 서버를 먼저 설정해 주세요.',
-    host_permission_required: '서버 주소에 대한 브라우저 권한이 필요합니다.',
-    bootstrap_unavailable: '서버 설정을 불러오지 못했습니다.',
-    job_status_unavailable: '작업 상태를 확인하지 못했습니다.',
-    job_create_failed: 'Pin 생성 작업을 시작하지 못했습니다.',
-    job_retry_failed: '작업을 다시 시도하지 못했습니다.',
-    job_discard_failed: '작업을 버리지 못했습니다.',
-    job_already_exists: '진행 중인 Pin 생성 작업이 있습니다.',
-    job_discarded: '이미 버려진 작업입니다.',
-    job_not_found: '진행 중인 작업을 찾지 못했습니다.',
-    job_not_retryable: '이 작업은 다시 시도할 수 없습니다.',
-    job_id_unavailable: '작업 번호를 만들지 못했습니다.',
-    job_too_large: '한 번에 처리할 수 있는 Pin 개수를 넘었습니다.',
-    job_scan_limit_exceeded: '작업 목록을 확인하는 범위를 넘었습니다.',
-    invalid_batch_id: '작업 정보가 올바르지 않습니다.',
-    stale_job_revision: '작업 상태가 이미 변경되었습니다.',
-    invalid_board_request: '새 보드 이름을 입력해 주세요.',
-    board_create_failed: '보드를 만들지 못했습니다.',
-    no_candidates: '선택한 이미지가 없습니다.',
-    too_many_candidates: '선택한 이미지가 너무 많습니다.',
-    candidate_collection_failed: '이미지 후보를 모으지 못했습니다.',
-    candidate_payload_too_large: '선택한 이미지 정보가 너무 큽니다.',
-    invalid_candidate_url: '사용할 수 없는 이미지 주소입니다.',
-    invalid_job_metadata: 'Pin 설정 정보가 올바르지 않습니다.',
-    pending_storage_failed: '대기 작업을 저장하지 못했습니다.',
-    storage_write_failed: '확장 프로그램 저장소에 기록하지 못했습니다.',
-    webextension_api_error: '브라우저 확장 기능을 사용하지 못했습니다.',
-    alarm_api_unavailable: '자동 작업 기능을 사용하지 못했습니다.',
-    alarm_schedule_failed: '자동 작업을 예약하지 못했습니다.',
-    worker_interrupted: '작업이 중단되었습니다.',
-    overlay_connection_lost: '확장 프로그램과의 연결이 끊어졌습니다.',
-    overlay_initialization_failed: 'Pin 생성 화면을 열지 못했습니다.',
-    overlay_integrity_failed: 'Pin 생성 화면을 안전하게 열지 못했습니다.',
-    overlay_protocol_error: '확장 프로그램 통신에 문제가 발생했습니다.',
-    overlay_session_expired: 'Pin 생성 화면의 연결 시간이 만료되었습니다.',
-    overlay_session_limit: '동시에 열 수 있는 Pin 생성 화면 수를 넘었습니다.',
-    overlay_session_replaced: '다른 Pin 생성 화면이 열렸습니다.',
-    open_options_failed: '확장 프로그램 설정을 열지 못했습니다.',
-    invalid_image_content: '올바른 이미지 파일이 아닙니다.',
-    unsupported_image_format: '지원하지 않는 이미지 형식입니다.',
-    unsupported_http_stack: '이미지 서버와 통신할 수 없는 환경입니다.',
-    invalid_url_policy: '보안 정책상 사용할 수 없는 이미지 주소입니다.',
-    blocked_address: '보안상 접근할 수 없는 이미지 주소입니다.',
-    dns_rebinding_detected: '이미지 주소의 네트워크 정보가 안전하지 않습니다.',
-    too_many_redirects: '이미지 주소가 너무 많이 이동되었습니다.',
-    unsupported_content_encoding: '지원하지 않는 방식으로 압축된 이미지 응답입니다.',
-    image_too_large: '이미지 파일이 너무 큽니다.',
-    image_too_many_pixels: '이미지 해상도가 너무 큽니다.',
-    image_download_failed: '이미지를 다운로드하지 못했습니다.',
-    image_fetch_timeout: '이미지 다운로드 시간을 넘었습니다.',
-    image_processing_timeout: '이미지 처리 시간을 넘었습니다.',
-    image_processing_failed: '이미지를 처리하지 못했습니다.',
-    media_configuration_error: '이미지 저장소 설정을 확인해 주세요.',
-    media_path_conflict: '이미지 저장 경로가 충돌했습니다.',
-    media_publish_changed: '이미지 저장 상태가 변경되었습니다.',
-    media_storage_failed: '이미지를 저장하지 못했습니다.',
-    media_storage_unsupported: '지원하지 않는 이미지 저장소입니다.',
-    lease_lost: '다른 작업과 처리 순서가 충돌했습니다.',
-    board_access_changed: '보드 접근 권한이 변경되었습니다.',
-    database_busy: '서버가 다른 작업을 처리 중입니다.',
-    pin_permanently_deleted: '해당 Pin은 이미 삭제되었습니다.',
-    idempotency_mismatch: '기존 작업 정보와 요청 내용이 다릅니다.',
-    batch_deadline_exceeded: '작업 처리 시간을 넘었습니다.',
-    in_progress: '이미 처리 중인 작업입니다.',
-    unexpected_error: '예상하지 못한 문제가 발생했습니다.',
-    internal_error: '서버 내부 문제가 발생했습니다.',
+    creating: t('messageCreating', undefined, 'Creating Pins.'),
+    discarded: t('messageDiscarded', undefined, 'Job discarded.'),
+    network_error: t('errorNetwork', undefined, 'Could not connect to the server.'),
+    temporary_server_error: t('errorTemporaryServer', undefined, 'The server encountered a temporary problem.'),
+    invalid_server_response: t('errorInvalidServerResponse', undefined, 'Could not verify the server response.'),
+    invalid_sender: t('errorInvalidSender', undefined, 'Could not verify the requesting page.'),
+    invalid_server_configuration: t('errorInvalidServerConfiguration', undefined, 'Check the Pinry server settings.'),
+    server_configuration_changed: t('errorServerConfigurationChanged', undefined, 'The Pinry server settings changed.'),
+    server_not_configured: t('errorServerNotConfigured', undefined, 'Set up the Pinry server first.'),
+    host_permission_required: t('errorHostPermissionRequired', undefined, 'Browser permission for the server address is required.'),
+    bootstrap_unavailable: t('errorBootstrapUnavailable', undefined, 'Could not load the server settings.'),
+    job_status_unavailable: t('errorJobStatusUnavailable', undefined, 'Could not check the job status.'),
+    job_create_failed: t('errorJobCreateFailed', undefined, 'Could not start the Pin creation job.'),
+    job_retry_failed: t('errorJobRetryFailed', undefined, 'Could not retry the job.'),
+    job_discard_failed: t('errorJobDiscardFailed', undefined, 'Could not discard the job.'),
+    job_already_exists: t('errorJobAlreadyExists', undefined, 'A Pin creation job is already in progress.'),
+    job_discarded: t('errorJobDiscarded', undefined, 'This job has already been discarded.'),
+    job_not_found: t('errorJobNotFound', undefined, 'Could not find an active job.'),
+    job_not_retryable: t('errorJobNotRetryable', undefined, 'This job cannot be retried.'),
+    job_id_unavailable: t('errorJobIdUnavailable', undefined, 'Could not create a job ID.'),
+    job_too_large: t('errorJobTooLarge', undefined, 'Too many Pins were submitted at once.'),
+    job_scan_limit_exceeded: t('errorJobScanLimitExceeded', undefined, 'The job-list scan limit was exceeded.'),
+    invalid_batch_id: t('errorInvalidBatchId', undefined, 'The job information is invalid.'),
+    stale_job_revision: t('errorStaleJobRevision', undefined, 'The job status has already changed.'),
+    invalid_board_request: t('errorInvalidBoardRequest', undefined, 'Enter a name for the new board.'),
+    board_create_failed: t('errorBoardCreateFailed', undefined, 'Could not create the board.'),
+    no_candidates: t('errorNoCandidates', undefined, 'No images are selected.'),
+    too_many_candidates: t('errorTooManyCandidates', undefined, 'Too many images are selected.'),
+    candidate_collection_failed: t('errorCandidateCollectionFailed', undefined, 'Could not collect image candidates.'),
+    candidate_payload_too_large: t('errorCandidatePayloadTooLarge', undefined, 'The selected-image data is too large.'),
+    invalid_candidate_url: t('errorInvalidCandidateUrl', undefined, 'This image address cannot be used.'),
+    invalid_job_metadata: t('errorInvalidJobMetadata', undefined, 'The Pin settings are invalid.'),
+    pending_storage_failed: t('errorPendingStorage', undefined, 'Could not save the pending job.'),
+    storage_write_failed: t('errorStorageWriteFailed', undefined, 'Could not write to extension storage.'),
+    webextension_api_error: t('errorWebextensionApi', undefined, 'Could not use browser extension features.'),
+    alarm_api_unavailable: t('errorAlarmApiUnavailable', undefined, 'Automatic job processing is unavailable.'),
+    alarm_schedule_failed: t('errorAlarmScheduleFailed', undefined, 'Could not schedule automatic job processing.'),
+    worker_interrupted: t('errorWorkerInterrupted', undefined, 'The job was interrupted.'),
+    overlay_connection_lost: t('errorOverlayConnectionLost', undefined, 'The connection to the extension was lost.'),
+    overlay_initialization_failed: t('errorOverlayInitializationFailed', undefined, 'Could not open the Pin creation screen.'),
+    overlay_integrity_failed: t('errorOverlayIntegrityFailed', undefined, 'Could not open the Pin creation screen securely.'),
+    overlay_protocol_error: t('errorOverlayProtocol', undefined, 'An extension communication error occurred.'),
+    overlay_session_expired: t('errorOverlaySessionExpired', undefined, 'The Pin creation screen connection expired.'),
+    overlay_session_limit: t('errorOverlaySessionLimit', undefined, 'Too many Pin creation screens are open.'),
+    overlay_session_replaced: t('errorOverlaySessionReplaced', undefined, 'Another Pin creation screen was opened.'),
+    open_options_failed: t('errorOpenOptionsFailed', undefined, 'Could not open the extension settings.'),
+    invalid_image_content: t('errorInvalidImageContent', undefined, 'This is not a valid image file.'),
+    unsupported_image_format: t('errorUnsupportedImageFormat', undefined, 'This image format is not supported.'),
+    unsupported_http_stack: t('errorUnsupportedHttpStack', undefined, 'This environment cannot communicate with the image server.'),
+    invalid_url_policy: t('errorInvalidUrlPolicy', undefined, 'This image address is blocked by the security policy.'),
+    blocked_address: t('errorBlockedAddress', undefined, 'This image address cannot be accessed securely.'),
+    dns_rebinding_detected: t('errorDnsRebindingDetected', undefined, 'The image address has unsafe network information.'),
+    too_many_redirects: t('errorTooManyRedirects', undefined, 'The image address redirected too many times.'),
+    unsupported_content_encoding: t('errorUnsupportedContentEncoding', undefined, 'The image response uses unsupported compression.'),
+    image_too_large: t('errorImageTooLarge', undefined, 'The image file is too large.'),
+    image_too_many_pixels: t('errorImageTooManyPixels', undefined, 'The image resolution is too large.'),
+    image_download_failed: t('errorImageDownloadFailed', undefined, 'Could not download the image.'),
+    image_fetch_timeout: t('errorImageFetchTimeout', undefined, 'The image download timed out.'),
+    image_processing_timeout: t('errorImageProcessingTimeout', undefined, 'Image processing timed out.'),
+    image_processing_failed: t('errorImageProcessingFailed', undefined, 'Could not process the image.'),
+    media_configuration_error: t('errorMediaConfiguration', undefined, 'Check the image-storage settings.'),
+    media_path_conflict: t('errorMediaPathConflict', undefined, 'The image-storage path conflicts with another file.'),
+    media_publish_changed: t('errorMediaPublishChanged', undefined, 'The image-storage state changed.'),
+    media_storage_failed: t('errorMediaStorageFailed', undefined, 'Could not store the image.'),
+    media_storage_unsupported: t('errorMediaStorageUnsupported', undefined, 'This image-storage backend is not supported.'),
+    lease_lost: t('errorLeaseLost', undefined, 'The processing order conflicted with another job.'),
+    board_access_changed: t('errorBoardAccessChanged', undefined, 'Board access permissions changed.'),
+    database_busy: t('errorDatabaseBusy', undefined, 'The server is processing another job.'),
+    pin_permanently_deleted: t('errorPinPermanentlyDeleted', undefined, 'This Pin has already been deleted.'),
+    idempotency_mismatch: t('errorIdempotencyMismatch', undefined, 'This request differs from the existing job data.'),
+    batch_deadline_exceeded: t('errorBatchDeadlineExceeded', undefined, 'The job exceeded its processing deadline.'),
+    in_progress: t('errorInProgress', undefined, 'This item is already being processed.'),
+    unexpected_error: t('errorUnexpected', undefined, 'An unexpected problem occurred.'),
+    internal_error: t('errorInternal', undefined, 'An internal server problem occurred.'),
   });
 
   function userMessageForCode(code) {
     if (typeof code === 'string' && /^http_4[0-9]{2}$/.test(code)) {
-      return '이미지 서버에서 파일을 가져오지 못했습니다.';
+      return t('errorImageServerFetch', undefined, 'Could not retrieve the file from the image server.');
     }
     return Object.hasOwn(USER_MESSAGE_BY_CODE, code)
-      ? USER_MESSAGE_BY_CODE[code] : '요청을 처리하지 못했습니다.';
+      ? USER_MESSAGE_BY_CODE[code]
+      : t('errorRequestFailed', undefined, 'Could not process the request.');
   }
 
   function openCreatedPins(scope, bootstrap) {
@@ -662,7 +669,7 @@
     const title = documentObject.createElement('h1');
     title.id = 'pinry-overlay-title';
     title.className = 'pinry-title';
-    title.textContent = 'SVRx Pinry 이미지 선택';
+    title.textContent = t('imageSelectionTitle', undefined, 'SVRx Pinry image selection');
     overlay.appendChild(title);
 
     const toolbar = documentObject.createElement('div');
@@ -682,7 +689,7 @@
     toolbarBrandName.textContent = 'SVRx Pinry';
     const toolbarBrandNote = documentObject.createElement('span');
     toolbarBrandNote.className = 'pinry-toolbar-brand-note';
-    toolbarBrandNote.textContent = '바깥 영역을 클릭하면 닫힙니다';
+    toolbarBrandNote.textContent = t('clickOutsideToClose', undefined, 'Click outside to close');
     const toolbarBrandCopy = documentObject.createElement('span');
     toolbarBrandCopy.className = 'pinry-toolbar-brand-copy';
     toolbarBrandCopy.appendChild(toolbarBrandName);
@@ -694,38 +701,41 @@
 
     const selectAll = createButton(
       documentObject,
-      '전체 선택',
+      t('selectAll', undefined, 'Select all'),
       'pinry-select-all',
     );
     const clearAll = createButton(
       documentObject,
-      '전체 해제',
+      t('clearAll', undefined, 'Clear all'),
       'pinry-clear-all',
     );
     const selectionCount = documentObject.createElement('span');
     selectionCount.className = 'pinry-selection-count';
-    selectionCount.textContent = '0개 선택';
+    selectionCount.textContent = t('selectedCount', ['0'], '0 selected');
     const toolbarSubmit = createButton(
       documentObject,
-      '선택한 Pin 만들기',
+      t('createSelectedPins', undefined, 'Create selected Pins'),
       'pinry-toolbar-submit pinry-submit',
     );
-    toolbarSubmit.setAttribute('aria-label', '선택한 Pin 만들기');
+    toolbarSubmit.setAttribute(
+      'aria-label',
+      t('createSelectedPins', undefined, 'Create selected Pins'),
+    );
     toolbarSubmit.disabled = true;
     const toolbarCloseButton = createButton(
       documentObject,
-      '닫기',
+      t('closeButton', undefined, 'Close'),
       'pinry-toolbar-close pinry-close',
     );
     const submit = createButton(
       documentObject,
-      '선택한 Pin 만들기',
+      t('createSelectedPins', undefined, 'Create selected Pins'),
       'pinry-submit',
     );
     submit.disabled = true;
     const closeButton = createButton(
       documentObject,
-      '닫기',
+      t('closeButton', undefined, 'Close'),
       'pinry-close',
     );
     toolbarLeft.appendChild(selectAll);
@@ -750,10 +760,14 @@
     metadataHeading.className = 'pinry-metadata-heading';
     const metadataTitle = documentObject.createElement('h2');
     metadataTitle.className = 'pinry-metadata-title';
-    metadataTitle.textContent = 'Pin 설정';
+    metadataTitle.textContent = t('pinSettingsHeading', undefined, 'Pin settings');
     const settingsSubtitle = documentObject.createElement('span');
     settingsSubtitle.className = 'pinry-settings-subtitle';
-    settingsSubtitle.textContent = '선택한 이미지에 공통 적용';
+    settingsSubtitle.textContent = t(
+      'settingsApplyToSelected',
+      undefined,
+      'Applied to all selected images',
+    );
     metadataHeading.appendChild(metadataTitle);
     metadataHeading.appendChild(settingsSubtitle);
     metadataHeader.appendChild(metadataHeading);
@@ -767,7 +781,7 @@
     boardSettings.className = 'pinry-settings-section pinry-board-settings';
     const boardSettingsTitle = documentObject.createElement('h3');
     boardSettingsTitle.className = 'pinry-section-title';
-    boardSettingsTitle.textContent = '보드 설정';
+    boardSettingsTitle.textContent = t('boardSettingsHeading', undefined, 'Board settings');
     boardSettings.appendChild(boardSettingsTitle);
     settingsFlow.appendChild(boardSettings);
     metadataBody.appendChild(settingsFlow);
@@ -777,16 +791,21 @@
     boardSelect.className = 'pinry-board-select';
     const noBoardOption = documentObject.createElement('option');
     noBoardOption.value = '';
-    noBoardOption.textContent = '보드 지정 안 함';
+    noBoardOption.textContent = t('noBoard', undefined, 'No board');
     boardSelect.appendChild(noBoardOption);
     boardSelect.value = '';
-    appendField(documentObject, boardSettings, '보드 선택', boardSelect);
+    appendField(
+      documentObject,
+      boardSettings,
+      t('boardSelectLabel', undefined, 'Select a board'),
+      boardSelect,
+    );
 
     const newBoardDetails = documentObject.createElement('details');
     newBoardDetails.className = 'pinry-new-board-details';
     newBoardDetails.open = true;
     const newBoardSummary = documentObject.createElement('summary');
-    newBoardSummary.textContent = '새 보드 만들기';
+    newBoardSummary.textContent = t('newBoardHeading', undefined, 'Create a new board');
     newBoardDetails.appendChild(newBoardSummary);
     boardSettings.appendChild(newBoardDetails);
 
@@ -794,7 +813,12 @@
     newBoardInput.id = 'pinry-new-board-name';
     newBoardInput.className = 'pinry-new-board-name';
     newBoardInput.type = 'text';
-    appendField(documentObject, newBoardDetails, '새 보드 이름', newBoardInput);
+    appendField(
+      documentObject,
+      newBoardDetails,
+      t('newBoardNameLabel', undefined, 'New board name'),
+      newBoardInput,
+    );
     const newBoardPrivate = documentObject.createElement('input');
     newBoardPrivate.id = 'pinry-new-board-private';
     newBoardPrivate.className = 'pinry-new-board-private';
@@ -802,12 +826,12 @@
     appendCheckboxField(
       documentObject,
       newBoardDetails,
-      '비공개 보드로 만들기',
+      t('privateBoardLabel', undefined, 'Make this board private'),
       newBoardPrivate,
     );
     const createBoardButton = createButton(
       documentObject,
-      '보드 만들기',
+      t('createBoardButton', undefined, 'Create board'),
       'pinry-create-board',
     );
     newBoardDetails.appendChild(createBoardButton);
@@ -819,7 +843,7 @@
     appendCheckboxField(
       documentObject,
       settingsFlow,
-      '비공개 Pin으로 저장',
+      t('privatePinLabel', undefined, 'Save as private Pins'),
       privateInput,
       'pinry-private-field',
     );
@@ -828,19 +852,29 @@
     details.className = 'pinry-details';
     details.open = false;
     const summary = documentObject.createElement('summary');
-    summary.textContent = '세부 정보';
+    summary.textContent = t('detailsHeading', undefined, 'Details');
     details.appendChild(summary);
     const descriptionInput = documentObject.createElement('textarea');
     descriptionInput.id = 'pinry-description';
     descriptionInput.className = 'pinry-description-input';
     descriptionInput.value = pageDefaults.description || '';
-    appendField(documentObject, details, '설명', descriptionInput);
+    appendField(
+      documentObject,
+      details,
+      t('descriptionLabel', undefined, 'Description'),
+      descriptionInput,
+    );
     const refererInput = documentObject.createElement('input');
     refererInput.id = 'pinry-referer';
     refererInput.className = 'pinry-referer-input';
     refererInput.type = 'url';
     refererInput.value = pageDefaults.referer || '';
-    appendField(documentObject, details, '원본 페이지 URL', refererInput);
+    appendField(
+      documentObject,
+      details,
+      t('sourcePageUrlLabel', undefined, 'Source page URL'),
+      refererInput,
+    );
     settingsFlow.appendChild(details);
 
     const tagsInput = documentObject.createElement('input');
@@ -850,7 +884,7 @@
     const tagsField = appendField(
       documentObject,
       settingsFlow,
-      '태그 (쉼표로 구분)',
+      t('tagsLabel', undefined, 'Tags (comma-separated)'),
       tagsInput,
       'pinry-tags-field',
     );
@@ -870,19 +904,27 @@
     jobItems.setAttribute('aria-live', 'polite');
     const jobActions = documentObject.createElement('div');
     jobActions.className = 'pinry-job-actions';
-    const retryButton = createButton(documentObject, '작업 재시도', 'pinry-job-retry');
+    const retryButton = createButton(
+      documentObject,
+      t('retryJobButton', undefined, 'Retry job'),
+      'pinry-job-retry',
+    );
     retryButton.style.display = 'none';
-    const discardButton = createButton(documentObject, '작업 버리기', 'pinry-job-discard');
+    const discardButton = createButton(
+      documentObject,
+      t('discardJobButton', undefined, 'Discard job'),
+      'pinry-job-discard',
+    );
     discardButton.style.display = 'none';
     const openOptionsButton = createButton(
       documentObject,
-      '설정 열기',
+      t('openSettingsButton', undefined, 'Open settings'),
       'pinry-open-options',
     );
     openOptionsButton.style.display = 'none';
     const bootstrapRetryButton = createButton(
       documentObject,
-      '설정 다시 시도',
+      t('retrySettingsButton', undefined, 'Retry settings'),
       'pinry-bootstrap-retry',
     );
     bootstrapRetryButton.style.display = 'none';
@@ -908,11 +950,15 @@
     candidateHeader.className = 'pinry-candidate-header';
     const candidateTitle = documentObject.createElement('h2');
     candidateTitle.className = 'pinry-candidate-title';
-    candidateTitle.textContent = '이미지 후보';
+    candidateTitle.textContent = t('imageCandidatesHeading', undefined, 'Image candidates');
     const candidateSummary = documentObject.createElement('div');
     candidateSummary.className = 'pinry-candidate-summary';
     candidateSummary.setAttribute('aria-live', 'polite');
-    candidateSummary.textContent = '0개 발견 · 0개 선택';
+    candidateSummary.textContent = t(
+      'candidateSummary',
+      ['0', '0'],
+      '0 found · 0 selected',
+    );
     candidateHeader.appendChild(candidateTitle);
     candidateHeader.appendChild(candidateSummary);
     candidateCanvas.appendChild(candidateHeader);
@@ -921,13 +967,20 @@
     const loading = documentObject.createElement('div');
     loading.className = 'pinry-loading';
     loading.setAttribute('aria-live', 'polite');
-    loading.textContent = '이미지 후보를 찾는 중입니다.';
+    loading.textContent = t(
+      'findingImageCandidates',
+      undefined,
+      'Finding image candidates.',
+    );
     candidateCanvas.appendChild(loading);
     const grid = documentObject.createElement('div');
     grid.className = 'pinry-candidate-grid';
     grid.setAttribute('role', 'listbox');
     grid.setAttribute('aria-multiselectable', 'true');
-    grid.setAttribute('aria-label', '이미지 후보');
+    grid.setAttribute(
+      'aria-label',
+      t('imageCandidatesHeading', undefined, 'Image candidates'),
+    );
     grid.setAttribute('aria-live', 'polite');
     candidateCanvas.appendChild(grid);
     mountRoot.appendChild(overlay);
@@ -983,8 +1036,10 @@
       const state = event.status === 'connected' ? 'connected'
         : event.status === 'reconnecting' ? 'reconnecting' : 'terminal';
       transportStatusElement.setAttribute('data-state', state);
-      transportStatusElement.textContent = state === 'connected' ? '연결됨'
-        : state === 'reconnecting' ? '재연결 중…'
+      transportStatusElement.textContent = state === 'connected'
+        ? t('transportConnected', undefined, 'Connected')
+        : state === 'reconnecting'
+          ? t('transportReconnecting', undefined, 'Reconnecting…')
           : userMessageForCode(event.code || 'overlay_connection_lost');
     }
 
@@ -1135,11 +1190,15 @@
         checkbox.textContent = selected ? '✓' : '';
       }
       const count = selectedIds.size;
-      selectionCount.textContent = `${count}개 선택`;
-      candidateSummary.textContent = `${candidateTotal}개 발견 · ${count}개 선택`;
+      selectionCount.textContent = t('selectedCount', [String(count)], `${count} selected`);
+      candidateSummary.textContent = t(
+        'candidateSummary',
+        [String(candidateTotal), String(count)],
+        `${candidateTotal} found · ${count} selected`,
+      );
       const submitText = count > 0
-        ? `선택한 ${count}개 Pin 만들기`
-        : '선택한 Pin 만들기';
+        ? t('createSelectedPinsCount', [String(count)], `Create selected Pins (${count})`)
+        : t('createSelectedPins', undefined, 'Create selected Pins');
       const submitDisabled = count === 0 || !bootstrapReady
         || submissionInFlight || createBoardInFlight || currentBatchId !== null
         || transportStatus !== 'connected';
@@ -1175,7 +1234,7 @@
       if (viewPinsButton) return;
       viewPinsButton = createButton(
         documentObject,
-        '생성한 Pin 보기',
+        t('viewCreatedPinsButton', undefined, 'View created Pins'),
         'pinry-view-created-pins',
       );
       listen(viewPinsButton, 'click', (event) => {
@@ -1191,9 +1250,21 @@
       renderedJob = job;
       const userSummary = summarizeJobForUser(job);
       jobStatus.textContent = userSummary.final
-        ? `성공 ${userSummary.success}개 · 실패 ${userSummary.failed}개`
-        : `성공 ${userSummary.success}개 · 처리 중 ${userSummary.pending}개`
-          + ` · 재시도 필요 ${userSummary.retryNeeded}개`;
+        ? t(
+          'jobSummaryFinal',
+          [String(userSummary.success), String(userSummary.failed)],
+          `Succeeded: ${userSummary.success} · Failed: ${userSummary.failed}`,
+        )
+        : t(
+          'jobSummaryActive',
+          [
+            String(userSummary.success),
+            String(userSummary.pending),
+            String(userSummary.retryNeeded),
+          ],
+          `Succeeded: ${userSummary.success} · Processing: ${userSummary.pending}`
+            + ` · Retry needed: ${userSummary.retryNeeded}`,
+        );
       while (jobItems.children.length > 0) jobItems.removeChild(jobItems.children[0]);
       job.items.forEach((item, index) => {
         const status = documentObject.createElement('div');
@@ -1227,7 +1298,7 @@
       bootstrapReady = false;
       retryButton.style.display = 'none';
       discardButton.style.display = 'none';
-      bootstrapRetryButton.textContent = '작업 복구';
+      bootstrapRetryButton.textContent = t('recoverJobButton', undefined, 'Recover job');
       bootstrapRetryButton.style.display = '';
       updateSelection();
     }
@@ -1341,7 +1412,7 @@
           && Number.isSafeInteger(board.id) && board.id > 0
           && typeof board.name === 'string') {
           appendBoardOption(board, { selected: true });
-          jobStatus.textContent = '보드를 만들었습니다.';
+          jobStatus.textContent = t('boardCreated', undefined, 'Board created.');
           return;
         }
         const code = response && typeof response.code === 'string'
@@ -1374,7 +1445,11 @@
       if (result.truncated) {
         const limitMessage = documentObject.createElement('div');
         limitMessage.className = 'pinry-limit-message';
-        limitMessage.textContent = '이미지 후보가 많아 처음 500개만 표시합니다.';
+        limitMessage.textContent = t(
+          'candidateLimitNotice',
+          undefined,
+          'There are many image candidates. Only the first 500 are shown.',
+        );
         candidateCanvas.appendChild(limitMessage);
       }
 
@@ -1386,7 +1461,11 @@
         tile.setAttribute('aria-selected', 'false');
         tile.setAttribute(
           'aria-label',
-          `이미지 ${index + 1}, ${candidate.width}×${candidate.height}`,
+          t(
+            'candidateImageAlt',
+            [String(index + 1), String(candidate.width), String(candidate.height)],
+            `Image ${index + 1}, ${candidate.width}×${candidate.height}`,
+          ),
         );
         tile.tabIndex = 0;
         tile.setAttribute('tabindex', '0');
@@ -1429,11 +1508,15 @@
           image.onerror = () => {
             if (!isCurrent()) return;
             if (image.parentNode) image.parentNode.removeChild(image);
-            appendPreviewPlaceholder('미리보기를 불러오지 못했습니다.');
+            appendPreviewPlaceholder(t(
+              'previewUnavailable',
+              undefined,
+              'Could not load the preview.',
+            ));
           };
           tile.appendChild(image);
         } else {
-          appendPreviewPlaceholder('HTTP 미리보기');
+          appendPreviewPlaceholder(t('httpPreview', undefined, 'HTTP preview'));
         }
 
         const dimensions = documentObject.createElement('div');
@@ -1449,7 +1532,11 @@
 
     function renderFailure() {
       if (!isCurrent()) return;
-      loading.textContent = '이미지 후보를 찾지 못했습니다.';
+      loading.textContent = t(
+        'noImageCandidatesFound',
+        undefined,
+        'No image candidates found.',
+      );
       if (typeof closeButton.focus === 'function') closeButton.focus();
     }
 
@@ -1546,7 +1633,7 @@
         || !currentBatchId || !isCurrent() || jobMutationInFlight
         || transportStatus !== 'connected'
         || typeof scope.confirm !== 'function'
-        || !scope.confirm('이 작업을 버릴까요?')) return;
+        || !scope.confirm(t('discardJobQuestion', undefined, 'Discard this job?'))) return;
       const batchId = currentBatchId;
       jobMutationInFlight = true;
       updateJobMutationControls();
@@ -1748,7 +1835,11 @@
       syncCreatedPinsButton();
       bootstrapReady = true;
       openOptionsButton.style.display = 'none';
-      bootstrapRetryButton.textContent = '설정 다시 시도';
+      bootstrapRetryButton.textContent = t(
+        'retrySettingsButton',
+        undefined,
+        'Retry settings',
+      );
       bootstrapRetryButton.style.display = 'none';
       while (boardSelect.children.length > 0) {
         boardSelect.removeChild(boardSelect.children[0]);
@@ -1756,7 +1847,7 @@
       availableBoardValues = new Set();
       const sentinel = documentObject.createElement('option');
       sentinel.value = '';
-      sentinel.textContent = '보드 지정 안 함';
+      sentinel.textContent = t('noBoard', undefined, 'No board');
       boardSelect.appendChild(sentinel);
       bootstrap.boards.forEach((board) => appendBoardOption(board));
       formState.boardValue = availableBoardValues.has(previousBoard) ? previousBoard : '';

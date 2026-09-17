@@ -1,8 +1,8 @@
 <!doctype html>
-<html lang="ko">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>SVRx Pinry 설정</title>
+    <title data-i18n="optionsTitle">SVRx Pinry settings</title>
     <style>
       body { font-family: sans-serif; max-width: 42rem; margin: 2rem; }
       label { display: block; margin: 1rem 0; }
@@ -15,39 +15,40 @@
     </style>
   </head>
   <body>
-    <h1>SVRx Pinry 서버</h1>
+    <h1 data-i18n="serverHeading">SVRx Pinry server</h1>
     <section id="serverState" aria-live="polite">
-      <h2>연결 상태</h2>
-      <p id="serverConnectionStatus">상태 확인 중</p>
+      <h2 data-i18n="connectionStatusHeading">Connection status</h2>
+      <p id="serverConnectionStatus" data-i18n="statusChecking">Checking status</p>
       <p id="serverOrigin"></p>
       <p id="serverUsername"></p>
       <p id="serverPermission"></p>
       <p id="serverTokenState"></p>
-      <button type="button" id="revalidateServer">연결 상태 다시 확인</button>
+      <button type="button" id="revalidateServer" data-i18n="recheckConnection">Check connection again</button>
     </section>
     <form id="serverForm">
       <label>
-        서버 주소
+        <span data-i18n="serverAddressLabel">Server address</span>
         <input type="text" id="pinryUrl" placeholder="https://pinry.example" required />
         <span id="pinryUrlError" class="field-error" aria-live="polite"></span>
       </label>
       <label>
-        API token
+        <span data-i18n="apiTokenLabel">API token</span>
         <input type="password" id="pinryToken" autocomplete="new-password" />
         <span id="pinryTokenError" class="field-error" aria-live="polite"></span>
       </label>
       <label>
         <input type="checkbox" id="allowInsecureHttp" />
-        HTTP를 사용하면 token이 암호화되지 않은 채 전송됨을 이해하고 동의합니다.
+        <span data-i18n="insecureHttpConsent">I understand and agree that using HTTP sends the token without encryption.</span>
       </label>
-      <button type="submit" id="saveServerSettings" disabled>저장 및 인증</button>
+      <button type="submit" id="saveServerSettings" disabled data-i18n="saveAndAuthenticate">Save and authenticate</button>
       <button
         type="button"
         id="deleteCredentials"
         aria-controls="deleteCredentialsConfirmation"
         aria-expanded="false"
         class="danger"
-      >인증 정보 삭제</button>
+        data-i18n="deleteCredentials"
+      >Delete credentials</button>
       <section
         id="deleteCredentialsConfirmation"
         role="alertdialog"
@@ -56,19 +57,17 @@
         class="delete-confirmation"
       >
         <p id="deleteCredentialsQuestion"></p>
-        <button type="button" id="confirmDeleteCredentials" class="danger">삭제</button>
-        <button type="button" id="cancelDeleteCredentials">취소</button>
+        <button type="button" id="confirmDeleteCredentials" class="danger" data-i18n="deleteButton">Delete</button>
+        <button type="button" id="cancelDeleteCredentials" data-i18n="cancelButton">Cancel</button>
       </section>
     </form>
-    <p class="notice">
-      확장 프로그램의 storage.local은 운영체제 비밀 저장소가 아닙니다.
-      해당 브라우저 프로필을 보호하세요.
-    </p>
+    <p class="notice" data-i18n="storageSecurityNotice">The extension's storage.local is not an operating-system secret store. Protect this browser profile.</p>
     <p id="status" tabindex="-1" aria-live="polite"></p>
     <label>
       <input type="checkbox" id="contextMenu" />
-      마우스 오른쪽 버튼 메뉴에 SVRx Pinry 추가 표시
+      <span data-i18n="showContextMenu">Show “Add to SVRx Pinry” in the right-click menu</span>
     </label>
+    <script src="i18n.js"></script>
     <script src="origin.js"></script>
     <script src="options.js"></script>
   </body>

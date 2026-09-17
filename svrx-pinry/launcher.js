@@ -175,13 +175,13 @@
     return state;
   }
 
-  function createOverlayHost(documentObject, frameUrl) {
+  function createOverlayHost(documentObject, frameUrl, frameTitle) {
     const host = documentObject.createElement('div');
     const shadow = host.attachShadow({ mode: 'closed' });
     const style = documentObject.createElement('style');
     style.textContent = HOST_STYLE;
     const frame = documentObject.createElement('iframe');
-    frame.title = 'SVRx Pinry 이미지 선택';
+    frame.title = frameTitle;
     frame.src = frameUrl;
     shadow.appendChild(style);
     shadow.appendChild(frame);
@@ -203,6 +203,7 @@
     const runtime = options.runtime || (scope.chrome && scope.chrome.runtime);
     const documentObject = options.document || scope.document;
     const candidatesApi = options.candidatesApi || scope.PinryCandidates;
+    const i18nApi = options.i18nApi || scope.PinryI18n;
     const cryptoObject = Object.hasOwn(options, 'crypto') ? options.crypto : scope.crypto;
     const now = options.now || Date.now;
     const getComputedStyleImpl = options.getComputedStyle
@@ -499,6 +500,13 @@
             hostRecord = createOverlayHost(
               documentObject,
               `${runtime.getURL('overlay.html')}#${capability}`,
+              i18nApi && typeof i18nApi.message === 'function'
+                ? i18nApi.message(
+                  'imageSelectionTitle',
+                  undefined,
+                  'SVRx Pinry image selection',
+                )
+                : 'SVRx Pinry image selection',
             );
           }
         } catch (_error) {

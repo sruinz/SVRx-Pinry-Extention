@@ -1,18 +1,24 @@
 (function exposeOptions(root, factory) {
   let originApi = root.PinryOrigin;
+  let i18nApi = root.PinryI18n;
   if (!originApi && typeof module === 'object' && module.exports) {
     originApi = require('./origin.js');
   }
+  if (!i18nApi && typeof module === 'object' && module.exports) {
+    i18nApi = require('./i18n.js');
+  }
   if (!originApi) throw new Error('origin_module_unavailable');
+  if (!i18nApi) throw new Error('i18n_module_unavailable');
 
-  const api = factory(root, originApi);
+  const api = factory(root, originApi, i18nApi);
   root.PinryOptions = api;
   if (typeof module === 'object' && module.exports) module.exports = api;
   if (root.document && root.chrome) api.initializeOptions(root);
-}(globalThis, function buildOptionsApi(root, originApi) {
+}(globalThis, function buildOptionsApi(root, originApi, i18nApi) {
   'use strict';
 
   const PENDING_KEY = 'pinry.server.pending';
+  const t = (key, substitutions, fallback) => i18nApi.message(key, substitutions, fallback);
 
   function createAttemptId(cryptoImpl = root.crypto) {
     if (cryptoImpl && typeof cryptoImpl.randomUUID === 'function') {
@@ -34,26 +40,26 @@
   }
 
   const STATUS_MESSAGES = Object.freeze({
-    saved: '서버 인증 정보를 확인했습니다.',
-    revalidated: '연결 상태를 다시 확인했습니다.',
-    deleting: '인증 정보를 삭제하는 중입니다.',
-    deleted: '인증 정보를 삭제했습니다.',
-    invalid_server_origin: '서버 주소를 확인하세요.',
-    invalid_token: 'API token을 입력하세요.',
-    insecure_http_confirmation_required: 'HTTP 평문 전송 동의가 필요합니다.',
-    host_permission_denied: '서버 접근 권한이 필요합니다.',
-    host_permission_required: '저장된 서버 접근 권한을 확인하세요.',
-    server_identity_changed: '저장된 사용자와 서버의 사용자가 일치하지 않습니다.',
-    server_configuration_changed: '서버 설정이 변경되었습니다. 다시 확인하세요.',
-    network_error: '서버에 연결하지 못했습니다.',
-    profile_request_failed: '서버 프로필을 확인하지 못했습니다.',
-    invalid_profile_response: '서버 응답을 확인하지 못했습니다.',
-    token_mismatch: 'API token이 서버 사용자와 일치하지 않습니다.',
-    pending_storage_failed: '인증 정보를 임시 저장하지 못했습니다.',
-    permission_rollback_failed: '서버 접근 권한을 정리하지 못했습니다.',
-    webextension_api_error: '브라우저 기능을 사용할 수 없습니다.',
-    attempt_id_unavailable: '안전한 인증 시도를 시작하지 못했습니다.',
-    server_validation_failed: '서버 인증을 확인하지 못했습니다.',
+    saved: t('optionsStatusSaved', undefined, 'Server credentials verified.'),
+    revalidated: t('optionsStatusRevalidated', undefined, 'Connection status checked again.'),
+    deleting: t('optionsStatusDeleting', undefined, 'Deleting credentials.'),
+    deleted: t('optionsStatusDeleted', undefined, 'Credentials deleted.'),
+    invalid_server_origin: t('errorInvalidServerOrigin', undefined, 'Check the server address.'),
+    invalid_token: t('errorInvalidToken', undefined, 'Enter an API token.'),
+    insecure_http_confirmation_required: t('errorInsecureHttpConfirmationRequired', undefined, 'Consent to unencrypted HTTP transmission is required.'),
+    host_permission_denied: t('errorHostPermissionDenied', undefined, 'Permission to access the server is required.'),
+    host_permission_required: t('errorHostPermissionRequiredSaved', undefined, 'Check the saved server access permission.'),
+    server_identity_changed: t('errorServerIdentityChanged', undefined, 'The saved user does not match the server user.'),
+    server_configuration_changed: t('errorServerConfigurationChangedOptions', undefined, 'The server settings changed. Check them again.'),
+    network_error: t('errorNetworkOptions', undefined, 'Could not connect to the server.'),
+    profile_request_failed: t('errorProfileRequestFailed', undefined, 'Could not verify the server profile.'),
+    invalid_profile_response: t('errorInvalidProfileResponse', undefined, 'Could not verify the server response.'),
+    token_mismatch: t('errorTokenMismatch', undefined, 'The API token does not match the server user.'),
+    pending_storage_failed: t('errorPendingStorageOptions', undefined, 'Could not temporarily save the credentials.'),
+    permission_rollback_failed: t('errorPermissionRollbackFailed', undefined, 'Could not clean up the server access permission.'),
+    webextension_api_error: t('errorWebextensionApiOptions', undefined, 'Browser extension features are unavailable.'),
+    attempt_id_unavailable: t('errorAttemptIdUnavailable', undefined, 'Could not start a secure authentication attempt.'),
+    server_validation_failed: t('errorServerValidationFailed', undefined, 'Could not verify server authentication.'),
   });
 
   function normalizeServerState(state) {
@@ -122,29 +128,30 @@
   function renderServerState(elements, state) {
     elements.serverState.dataset.phase = state.phase;
     if (state.phase === 'loading') {
-      elements.serverConnectionStatus.textContent = '상태 확인 중';
+      elements.serverConnectionStatus.textContent = t('statusChecking', undefined, 'Checking status');
       return;
     }
     if (state.phase === 'unavailable') {
-      elements.serverConnectionStatus.textContent = '상태 확인 불가';
+      elements.serverConnectionStatus.textContent = t('statusUnavailable', undefined, 'Status unavailable');
       return;
     }
 
     if (!state.configured) {
-      elements.serverConnectionStatus.textContent = '연결되지 않음';
+      elements.serverConnectionStatus.textContent = t('statusNotConnected', undefined, 'Not connected');
       elements.serverOrigin.textContent = '';
       elements.serverUsername.textContent = '';
       elements.serverPermission.textContent = '';
-      elements.serverTokenState.textContent = '저장된 API 토큰 없음';
+      elements.serverTokenState.textContent = t('tokenNotSaved', undefined, 'No saved API token');
       return;
     }
 
-    elements.serverConnectionStatus.textContent = '연결 정보 저장됨';
-    elements.serverOrigin.textContent = `서버: ${state.origin}`;
-    elements.serverUsername.textContent = `사용자: ${state.username}`;
+    elements.serverConnectionStatus.textContent = t('connectionSaved', undefined, 'Connection details saved');
+    elements.serverOrigin.textContent = t('serverValue', [state.origin], `Server: ${state.origin}`);
+    elements.serverUsername.textContent = t('userValue', [state.username], `User: ${state.username}`);
     elements.serverPermission.textContent = state.hasPermission
-      ? '서버 접근 권한 있음' : '서버 접근 권한 없음';
-    elements.serverTokenState.textContent = 'API 토큰 저장됨';
+      ? t('serverPermissionGranted', undefined, 'Server access granted')
+      : t('serverPermissionMissing', undefined, 'Server access not granted');
+    elements.serverTokenState.textContent = t('tokenSaved', undefined, 'API token saved');
   }
 
   function updateSaveEligibility(originInput, tokenInput, submitButton) {
@@ -237,6 +244,7 @@
 
   function initializeOptions(scope) {
     const { document, chrome } = scope;
+    i18nApi.localizeDocument(document);
     const form = document.getElementById('serverForm');
     const originInput = document.getElementById('pinryUrl');
     const originError = document.getElementById('pinryUrlError');
@@ -315,8 +323,16 @@
         || !viewState.configured) return;
       const savedOrigin = viewState.origin;
       deleteQuestion.textContent = savedOrigin
-        ? `${savedOrigin} 연결과 저장된 인증 정보를 삭제하시겠습니까?`
-        : '저장된 연결과 인증 정보를 삭제하시겠습니까?';
+        ? t(
+          'deleteCredentialsForServerQuestion',
+          [savedOrigin],
+          `Delete the ${savedOrigin} connection and its saved credentials?`,
+        )
+        : t(
+          'deleteCredentialsQuestion',
+          undefined,
+          'Delete the saved connection and credentials?',
+        );
       deleteConfirmationVisible = true;
       deleteConfirmation.hidden = false;
       deleteButton.setAttribute('aria-expanded', 'true');

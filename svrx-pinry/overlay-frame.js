@@ -471,6 +471,7 @@
     const historyObject = options.history || scope.history;
     const rendererApi = options.rendererApi || scope.PinryBookmarklet;
     const selectionApi = options.selectionApi || scope.PinrySelection;
+    const i18nApi = options.i18nApi || scope.PinryI18n;
     const setTimeoutImpl = options.setTimeoutImpl
       || (typeof scope.setTimeout === 'function' && scope.setTimeout.bind(scope));
     const clearTimeoutImpl = options.clearTimeoutImpl
@@ -483,6 +484,9 @@
       || !selectionApi || typeof setTimeoutImpl !== 'function'
       || typeof clearTimeoutImpl !== 'function' || typeof now !== 'function'
       || typeof Encoder !== 'function') return null;
+    if (i18nApi && typeof i18nApi.localizeDocument === 'function') {
+      i18nApi.localizeDocument(documentObject);
+    }
 
     let phase = 'CLAIMING';
     let port = null;

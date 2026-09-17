@@ -3179,7 +3179,7 @@
       chromeApi.scripting,
       [{
         target: { tabId: tab.id, frameIds: [0] },
-        files: ['candidates.js', 'launcher.js'],
+        files: ['i18n.js', 'candidates.js', 'launcher.js'],
       }],
       chromeApi.runtime,
     ).then(() => true);
@@ -3191,7 +3191,9 @@
         if (!stored || stored.contextMenu !== false) {
           chromeApi.contextMenus.create({
             id: 'addToPinry',
-            title: 'SVRx Pinry에 이미지 추가',
+            title: chromeApi.i18n && typeof chromeApi.i18n.getMessage === 'function'
+              ? chromeApi.i18n.getMessage('contextMenuAddImage') || 'Add images to SVRx Pinry'
+              : 'Add images to SVRx Pinry',
             contexts: ['page', 'selection', 'link', 'editable', 'image', 'video', 'audio'],
           });
         }
