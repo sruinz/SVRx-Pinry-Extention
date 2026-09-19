@@ -2,7 +2,7 @@
 <html lang="ko">
   <head>
     <meta charset="UTF-8" />
-    <title>SVRx Pinry 설정</title>
+    <title data-i18n="optionsTitle">SVRx Pinry Settings</title>
     <style>
       body { font-family: sans-serif; max-width: 42rem; margin: 2rem; }
       label { display: block; margin: 1rem 0; }
@@ -15,20 +15,25 @@
     </style>
   </head>
   <body>
-    <h1>SVRx Pinry 서버</h1>
+    <label><span data-i18n="optionsLanguageLabel">Language</span>
+      <select id="extensionLocale">
+        <option value="" data-i18n="optionsAutomaticLanguage">Browser language</option>
+        <option value="ko">한국어</option><option value="en">English</option>
+        <option value="zh">简体中文</option><option value="fr">Français</option>
+      </select>
+    </label>
+    <h1><span data-i18n="optionsServerHeading">SVRx Pinry 서버</span></h1>
     <section id="serverState" aria-live="polite">
-      <h2>연결 상태</h2>
-      <p id="serverConnectionStatus">상태 확인 중</p>
+      <h2><span data-i18n="optionsConnectionHeading">연결 상태</span></h2>
+      <p id="serverConnectionStatus"><span data-i18n="stateLoading">상태 확인 중</span></p>
       <p id="serverOrigin"></p>
       <p id="serverUsername"></p>
       <p id="serverPermission"></p>
       <p id="serverTokenState"></p>
-      <button type="button" id="revalidateServer">연결 상태 다시 확인</button>
+      <button type="button" id="revalidateServer"><span data-i18n="optionsRevalidateButton">연결 상태 다시 확인</span></button>
     </section>
     <form id="serverForm">
-      <label>
-        서버 주소
-        <input type="text" id="pinryUrl" placeholder="https://pinry.example" required />
+      <label><span data-i18n="optionsServerAddressLabel">서버 주소</span><input type="text" id="pinryUrl" placeholder="https://pinry.example" required />
         <span id="pinryUrlError" class="field-error" aria-live="polite"></span>
       </label>
       <label>
@@ -37,17 +42,15 @@
         <span id="pinryTokenError" class="field-error" aria-live="polite"></span>
       </label>
       <label>
-        <input type="checkbox" id="allowInsecureHttp" />
-        HTTP를 사용하면 token이 암호화되지 않은 채 전송됨을 이해하고 동의합니다.
-      </label>
-      <button type="submit" id="saveServerSettings" disabled>저장 및 인증</button>
+        <input type="checkbox" id="allowInsecureHttp" /><span data-i18n="optionsInsecureHttpConsent">HTTP를 사용하면 token이 암호화되지 않은 채 전송됨을 이해하고 동의합니다.</span></label>
+      <button type="submit" id="saveServerSettings" disabled><span data-i18n="optionsSaveButton">저장 및 인증</span></button>
       <button
         type="button"
         id="deleteCredentials"
         aria-controls="deleteCredentialsConfirmation"
         aria-expanded="false"
         class="danger"
-      >인증 정보 삭제</button>
+      ><span data-i18n="optionsDeleteButton">인증 정보 삭제</span></button>
       <section
         id="deleteCredentialsConfirmation"
         role="alertdialog"
@@ -56,19 +59,17 @@
         class="delete-confirmation"
       >
         <p id="deleteCredentialsQuestion"></p>
-        <button type="button" id="confirmDeleteCredentials" class="danger">삭제</button>
-        <button type="button" id="cancelDeleteCredentials">취소</button>
+        <button type="button" id="confirmDeleteCredentials" class="danger"><span data-i18n="optionsDeleteConfirmButton">삭제</span></button>
+        <button type="button" id="cancelDeleteCredentials"><span data-i18n="optionsCancelButton">취소</span></button>
       </section>
     </form>
-    <p class="notice">
-      확장 프로그램의 storage.local은 운영체제 비밀 저장소가 아닙니다.
-      해당 브라우저 프로필을 보호하세요.
-    </p>
+    <p class="notice"><span data-i18n="optionsStorageNotice"></span> <span data-i18n="optionsProtectProfile"></span></p>
     <p id="status" tabindex="-1" aria-live="polite"></p>
     <label>
-      <input type="checkbox" id="contextMenu" />
-      마우스 오른쪽 버튼 메뉴에 SVRx Pinry 추가 표시
-    </label>
+      <input type="checkbox" id="contextMenu" /><span data-i18n="optionsContextMenuLabel">마우스 오른쪽 버튼 메뉴에 SVRx Pinry 추가 표시</span></label>
+    <script src="translations.js"></script>
+    <script src="i18n.js"></script>
+    <script src="i18n-settings.js"></script>
     <script src="origin.js"></script>
     <script src="options.js"></script>
   </body>

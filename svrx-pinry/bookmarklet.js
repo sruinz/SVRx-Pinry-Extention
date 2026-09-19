@@ -1,8 +1,10 @@
 (function exposeBookmarklet(root, factory) {
-  const api = factory();
+  const i18n = typeof module === 'object' && module.exports
+    ? require('./i18n.js') : root.PinryI18n;
+  const api = factory(i18n);
   root.PinryBookmarklet = api;
   if (typeof module === 'object' && module.exports) module.exports = api;
-}(globalThis, function buildBookmarkletApi() {
+}(globalThis, function buildBookmarkletApi(i18n) {
   'use strict';
 
   const OVERLAY_ID = 'pinry-images';
@@ -10,14 +12,14 @@
   function createButton(documentObject, text, className) {
     const button = documentObject.createElement('button');
     button.type = 'button';
-    button.textContent = text;
+    i18n.setText(button, text);
     button.className = className;
     return button;
   }
 
   function appendVisibleLabel(documentObject, parent, text, control) {
     const label = documentObject.createElement('label');
-    label.textContent = text;
+    i18n.setText(label, text);
     label.setAttribute('for', control.id);
     parent.appendChild(label);
     parent.appendChild(control);
@@ -37,7 +39,7 @@
     field.className = `pinry-checkbox-field${className ? ` ${className}` : ''}`;
     field.appendChild(control);
     const label = documentObject.createElement('label');
-    label.textContent = text;
+    i18n.setText(label, text);
     label.setAttribute('for', control.id);
     field.appendChild(label);
     parent.appendChild(field);
@@ -76,97 +78,97 @@
   }
 
   const ITEM_STATUS_LABELS = Object.freeze({
-    pending: '처리 대기',
-    created: '생성 완료',
-    replayed: '생성 완료',
-    failed: '생성 실패',
-    conflict: '처리 충돌',
-    unknown: '상태 확인 필요',
+    pending: i18n.message('itemPending'),
+    created: i18n.message('itemReplayed'),
+    replayed: i18n.message('itemReplayed'),
+    failed: i18n.message('itemFailed'),
+    conflict: i18n.message('itemConflict'),
+    unknown: i18n.message('itemUnknown'),
   });
 
   const USER_MESSAGE_BY_CODE = Object.freeze({
-    creating: 'Pin을 만드는 중입니다.',
-    discarded: '작업을 버렸습니다.',
-    network_error: '서버에 연결하지 못했습니다.',
-    temporary_server_error: '서버에 일시적인 문제가 발생했습니다.',
-    invalid_server_response: '서버 응답을 확인하지 못했습니다.',
-    invalid_sender: '요청을 보낸 페이지를 확인하지 못했습니다.',
-    invalid_server_configuration: 'Pinry 서버 설정을 확인해 주세요.',
-    server_configuration_changed: 'Pinry 서버 설정이 변경되었습니다.',
-    server_not_configured: 'Pinry 서버를 먼저 설정해 주세요.',
-    host_permission_required: '서버 주소에 대한 브라우저 권한이 필요합니다.',
-    bootstrap_unavailable: '서버 설정을 불러오지 못했습니다.',
-    job_status_unavailable: '작업 상태를 확인하지 못했습니다.',
-    job_create_failed: 'Pin 생성 작업을 시작하지 못했습니다.',
-    job_retry_failed: '작업을 다시 시도하지 못했습니다.',
-    job_discard_failed: '작업을 버리지 못했습니다.',
-    job_already_exists: '진행 중인 Pin 생성 작업이 있습니다.',
-    job_discarded: '이미 버려진 작업입니다.',
-    job_not_found: '진행 중인 작업을 찾지 못했습니다.',
-    job_not_retryable: '이 작업은 다시 시도할 수 없습니다.',
-    job_id_unavailable: '작업 번호를 만들지 못했습니다.',
-    job_too_large: '한 번에 처리할 수 있는 Pin 개수를 넘었습니다.',
-    job_scan_limit_exceeded: '작업 목록을 확인하는 범위를 넘었습니다.',
-    invalid_batch_id: '작업 정보가 올바르지 않습니다.',
-    stale_job_revision: '작업 상태가 이미 변경되었습니다.',
-    invalid_board_request: '새 보드 이름을 입력해 주세요.',
-    board_create_failed: '보드를 만들지 못했습니다.',
-    no_candidates: '선택한 이미지가 없습니다.',
-    too_many_candidates: '선택한 이미지가 너무 많습니다.',
-    candidate_collection_failed: '이미지 후보를 모으지 못했습니다.',
-    candidate_payload_too_large: '선택한 이미지 정보가 너무 큽니다.',
-    invalid_candidate_url: '사용할 수 없는 이미지 주소입니다.',
-    invalid_job_metadata: 'Pin 설정 정보가 올바르지 않습니다.',
-    pending_storage_failed: '대기 작업을 저장하지 못했습니다.',
-    storage_write_failed: '확장 프로그램 저장소에 기록하지 못했습니다.',
-    webextension_api_error: '브라우저 확장 기능을 사용하지 못했습니다.',
-    alarm_api_unavailable: '자동 작업 기능을 사용하지 못했습니다.',
-    alarm_schedule_failed: '자동 작업을 예약하지 못했습니다.',
-    worker_interrupted: '작업이 중단되었습니다.',
-    overlay_connection_lost: '확장 프로그램과의 연결이 끊어졌습니다.',
-    overlay_initialization_failed: 'Pin 생성 화면을 열지 못했습니다.',
-    overlay_integrity_failed: 'Pin 생성 화면을 안전하게 열지 못했습니다.',
-    overlay_protocol_error: '확장 프로그램 통신에 문제가 발생했습니다.',
-    overlay_session_expired: 'Pin 생성 화면의 연결 시간이 만료되었습니다.',
-    overlay_session_limit: '동시에 열 수 있는 Pin 생성 화면 수를 넘었습니다.',
-    overlay_session_replaced: '다른 Pin 생성 화면이 열렸습니다.',
-    open_options_failed: '확장 프로그램 설정을 열지 못했습니다.',
-    invalid_image_content: '올바른 이미지 파일이 아닙니다.',
-    unsupported_image_format: '지원하지 않는 이미지 형식입니다.',
-    unsupported_http_stack: '이미지 서버와 통신할 수 없는 환경입니다.',
-    invalid_url_policy: '보안 정책상 사용할 수 없는 이미지 주소입니다.',
-    blocked_address: '보안상 접근할 수 없는 이미지 주소입니다.',
-    dns_rebinding_detected: '이미지 주소의 네트워크 정보가 안전하지 않습니다.',
-    too_many_redirects: '이미지 주소가 너무 많이 이동되었습니다.',
-    unsupported_content_encoding: '지원하지 않는 방식으로 압축된 이미지 응답입니다.',
-    image_too_large: '이미지 파일이 너무 큽니다.',
-    image_too_many_pixels: '이미지 해상도가 너무 큽니다.',
-    image_download_failed: '이미지를 다운로드하지 못했습니다.',
-    image_fetch_timeout: '이미지 다운로드 시간을 넘었습니다.',
-    image_processing_timeout: '이미지 처리 시간을 넘었습니다.',
-    image_processing_failed: '이미지를 처리하지 못했습니다.',
-    media_configuration_error: '이미지 저장소 설정을 확인해 주세요.',
-    media_path_conflict: '이미지 저장 경로가 충돌했습니다.',
-    media_publish_changed: '이미지 저장 상태가 변경되었습니다.',
-    media_storage_failed: '이미지를 저장하지 못했습니다.',
-    media_storage_unsupported: '지원하지 않는 이미지 저장소입니다.',
-    lease_lost: '다른 작업과 처리 순서가 충돌했습니다.',
-    board_access_changed: '보드 접근 권한이 변경되었습니다.',
-    database_busy: '서버가 다른 작업을 처리 중입니다.',
-    pin_permanently_deleted: '해당 Pin은 이미 삭제되었습니다.',
-    idempotency_mismatch: '기존 작업 정보와 요청 내용이 다릅니다.',
-    batch_deadline_exceeded: '작업 처리 시간을 넘었습니다.',
-    in_progress: '이미 처리 중인 작업입니다.',
-    unexpected_error: '예상하지 못한 문제가 발생했습니다.',
-    internal_error: '서버 내부 문제가 발생했습니다.',
+    creating: i18n.message('msgCreating'),
+    discarded: i18n.message('msgDiscarded'),
+    network_error: i18n.message('msgNetworkError'),
+    temporary_server_error: i18n.message('msgTemporaryServerError'),
+    invalid_server_response: i18n.message('msgInvalidServerResponse'),
+    invalid_sender: i18n.message('msgInvalidSender'),
+    invalid_server_configuration: i18n.message('msgInvalidServerConfiguration'),
+    server_configuration_changed: i18n.message('msgServerConfigurationChanged'),
+    server_not_configured: i18n.message('msgServerNotConfigured'),
+    host_permission_required: i18n.message('msgHostPermissionRequired'),
+    bootstrap_unavailable: i18n.message('msgBootstrapUnavailable'),
+    job_status_unavailable: i18n.message('msgJobStatusUnavailable'),
+    job_create_failed: i18n.message('msgJobCreateFailed'),
+    job_retry_failed: i18n.message('msgJobRetryFailed'),
+    job_discard_failed: i18n.message('msgJobDiscardFailed'),
+    job_already_exists: i18n.message('msgJobAlreadyExists'),
+    job_discarded: i18n.message('msgJobDiscarded'),
+    job_not_found: i18n.message('msgJobNotFound'),
+    job_not_retryable: i18n.message('msgJobNotRetryable'),
+    job_id_unavailable: i18n.message('msgJobIdUnavailable'),
+    job_too_large: i18n.message('msgJobTooLarge'),
+    job_scan_limit_exceeded: i18n.message('msgJobScanLimitExceeded'),
+    invalid_batch_id: i18n.message('msgInvalidBatchId'),
+    stale_job_revision: i18n.message('msgStaleJobRevision'),
+    invalid_board_request: i18n.message('msgInvalidBoardRequest'),
+    board_create_failed: i18n.message('msgBoardCreateFailed'),
+    no_candidates: i18n.message('msgNoCandidates'),
+    too_many_candidates: i18n.message('msgTooManyCandidates'),
+    candidate_collection_failed: i18n.message('msgCandidateCollectionFailed'),
+    candidate_payload_too_large: i18n.message('msgCandidatePayloadTooLarge'),
+    invalid_candidate_url: i18n.message('msgInvalidCandidateUrl'),
+    invalid_job_metadata: i18n.message('msgInvalidJobMetadata'),
+    pending_storage_failed: i18n.message('msgPendingStorageFailed'),
+    storage_write_failed: i18n.message('msgStorageWriteFailed'),
+    webextension_api_error: i18n.message('msgWebextensionApiError'),
+    alarm_api_unavailable: i18n.message('msgAlarmApiUnavailable'),
+    alarm_schedule_failed: i18n.message('msgAlarmScheduleFailed'),
+    worker_interrupted: i18n.message('msgWorkerInterrupted'),
+    overlay_connection_lost: i18n.message('msgOverlayConnectionLost'),
+    overlay_initialization_failed: i18n.message('msgOverlayInitializationFailed'),
+    overlay_integrity_failed: i18n.message('msgOverlayIntegrityFailed'),
+    overlay_protocol_error: i18n.message('msgOverlayProtocolError'),
+    overlay_session_expired: i18n.message('msgOverlaySessionExpired'),
+    overlay_session_limit: i18n.message('msgOverlaySessionLimit'),
+    overlay_session_replaced: i18n.message('msgOverlaySessionReplaced'),
+    open_options_failed: i18n.message('msgOpenOptionsFailed'),
+    invalid_image_content: i18n.message('msgInvalidImageContent'),
+    unsupported_image_format: i18n.message('msgUnsupportedImageFormat'),
+    unsupported_http_stack: i18n.message('msgUnsupportedHttpStack'),
+    invalid_url_policy: i18n.message('msgInvalidUrlPolicy'),
+    blocked_address: i18n.message('msgBlockedAddress'),
+    dns_rebinding_detected: i18n.message('msgDnsRebindingDetected'),
+    too_many_redirects: i18n.message('msgTooManyRedirects'),
+    unsupported_content_encoding: i18n.message('msgUnsupportedContentEncoding'),
+    image_too_large: i18n.message('msgImageTooLarge'),
+    image_too_many_pixels: i18n.message('msgImageTooManyPixels'),
+    image_download_failed: i18n.message('msgImageDownloadFailed'),
+    image_fetch_timeout: i18n.message('msgImageFetchTimeout'),
+    image_processing_timeout: i18n.message('msgImageProcessingTimeout'),
+    image_processing_failed: i18n.message('msgImageProcessingFailed'),
+    media_configuration_error: i18n.message('msgMediaConfigurationError'),
+    media_path_conflict: i18n.message('msgMediaPathConflict'),
+    media_publish_changed: i18n.message('msgMediaPublishChanged'),
+    media_storage_failed: i18n.message('msgMediaStorageFailed'),
+    media_storage_unsupported: i18n.message('msgMediaStorageUnsupported'),
+    lease_lost: i18n.message('msgLeaseLost'),
+    board_access_changed: i18n.message('msgBoardAccessChanged'),
+    database_busy: i18n.message('msgDatabaseBusy'),
+    pin_permanently_deleted: i18n.message('msgPinPermanentlyDeleted'),
+    idempotency_mismatch: i18n.message('msgIdempotencyMismatch'),
+    batch_deadline_exceeded: i18n.message('msgBatchDeadlineExceeded'),
+    in_progress: i18n.message('msgInProgress'),
+    unexpected_error: i18n.message('msgUnexpectedError'),
+    internal_error: i18n.message('msgInternalError'),
   });
 
   function userMessageForCode(code) {
     if (typeof code === 'string' && /^http_4[0-9]{2}$/.test(code)) {
-      return '이미지 서버에서 파일을 가져오지 못했습니다.';
+      return i18n.message('msgHttpClientError');
     }
     return Object.hasOwn(USER_MESSAGE_BY_CODE, code)
-      ? USER_MESSAGE_BY_CODE[code] : '요청을 처리하지 못했습니다.';
+      ? USER_MESSAGE_BY_CODE[code] : i18n.message('msgFallback');
   }
 
   function openCreatedPins(scope, bootstrap) {
@@ -650,6 +652,27 @@
           min-width: 0;
         }
       }
+      @media (max-width: 1080px) {
+        html:not([lang="ko"]) #pinry-images { padding: 16px; }
+        html:not([lang="ko"]) #pinry-images .pinry-toolbar {
+          position: static;
+          grid-template-columns: minmax(0, 1fr);
+          margin-bottom: 16px;
+        }
+        html:not([lang="ko"]) #pinry-images .pinry-toolbar-brand {
+          grid-column: 1; grid-row: 1;
+        }
+        html:not([lang="ko"]) #pinry-images .pinry-toolbar-left {
+          grid-column: 1; grid-row: 2; justify-self: stretch;
+          flex-wrap: wrap;
+        }
+        html:not([lang="ko"]) #pinry-images .pinry-toolbar-right {
+          grid-column: 1; grid-row: 3; justify-self: stretch;
+          justify-content: flex-start;
+          flex-wrap: wrap;
+        }
+        html:not([lang="ko"]) #pinry-images .pinry-toolbar button { white-space: normal; }
+      }
     `;
     mountRoot.appendChild(style);
 
@@ -662,7 +685,7 @@
     const title = documentObject.createElement('h1');
     title.id = 'pinry-overlay-title';
     title.className = 'pinry-title';
-    title.textContent = 'SVRx Pinry 이미지 선택';
+    i18n.setText(title, i18n.message('overlayTitle'));
     overlay.appendChild(title);
 
     const toolbar = documentObject.createElement('div');
@@ -679,10 +702,10 @@
     toolbarBrandIcon.setAttribute('alt', '');
     const toolbarBrandName = documentObject.createElement('span');
     toolbarBrandName.className = 'pinry-toolbar-brand-name';
-    toolbarBrandName.textContent = 'SVRx Pinry';
+    i18n.setText(toolbarBrandName, 'SVRx Pinry');
     const toolbarBrandNote = documentObject.createElement('span');
     toolbarBrandNote.className = 'pinry-toolbar-brand-note';
-    toolbarBrandNote.textContent = '바깥 영역을 클릭하면 닫힙니다';
+    i18n.setText(toolbarBrandNote, i18n.message('overlayCloseHint'));
     const toolbarBrandCopy = documentObject.createElement('span');
     toolbarBrandCopy.className = 'pinry-toolbar-brand-copy';
     toolbarBrandCopy.appendChild(toolbarBrandName);
@@ -694,38 +717,38 @@
 
     const selectAll = createButton(
       documentObject,
-      '전체 선택',
+      i18n.message('overlaySelectAll'),
       'pinry-select-all',
     );
     const clearAll = createButton(
       documentObject,
-      '전체 해제',
+      i18n.message('overlayDeselectAll'),
       'pinry-clear-all',
     );
     const selectionCount = documentObject.createElement('span');
     selectionCount.className = 'pinry-selection-count';
-    selectionCount.textContent = '0개 선택';
+    i18n.setText(selectionCount, i18n.message('overlaySelectionCountZero'));
     const toolbarSubmit = createButton(
       documentObject,
-      '선택한 Pin 만들기',
+      i18n.message('overlaySubmitPin'),
       'pinry-toolbar-submit pinry-submit',
     );
-    toolbarSubmit.setAttribute('aria-label', '선택한 Pin 만들기');
+    i18n.setAttribute(toolbarSubmit, 'aria-label', i18n.message('overlaySubmitPin'));
     toolbarSubmit.disabled = true;
     const toolbarCloseButton = createButton(
       documentObject,
-      '닫기',
+      i18n.message('overlayClose'),
       'pinry-toolbar-close pinry-close',
     );
     const submit = createButton(
       documentObject,
-      '선택한 Pin 만들기',
+      i18n.message('overlaySubmitPin'),
       'pinry-submit',
     );
     submit.disabled = true;
     const closeButton = createButton(
       documentObject,
-      '닫기',
+      i18n.message('overlayClose'),
       'pinry-close',
     );
     toolbarLeft.appendChild(selectAll);
@@ -750,10 +773,10 @@
     metadataHeading.className = 'pinry-metadata-heading';
     const metadataTitle = documentObject.createElement('h2');
     metadataTitle.className = 'pinry-metadata-title';
-    metadataTitle.textContent = 'Pin 설정';
+    i18n.setText(metadataTitle, i18n.message('metadataTitle'));
     const settingsSubtitle = documentObject.createElement('span');
     settingsSubtitle.className = 'pinry-settings-subtitle';
-    settingsSubtitle.textContent = '선택한 이미지에 공통 적용';
+    i18n.setText(settingsSubtitle, i18n.message('metadataSubtitle'));
     metadataHeading.appendChild(metadataTitle);
     metadataHeading.appendChild(settingsSubtitle);
     metadataHeader.appendChild(metadataHeading);
@@ -767,7 +790,7 @@
     boardSettings.className = 'pinry-settings-section pinry-board-settings';
     const boardSettingsTitle = documentObject.createElement('h3');
     boardSettingsTitle.className = 'pinry-section-title';
-    boardSettingsTitle.textContent = '보드 설정';
+    i18n.setText(boardSettingsTitle, i18n.message('boardSettingsTitle'));
     boardSettings.appendChild(boardSettingsTitle);
     settingsFlow.appendChild(boardSettings);
     metadataBody.appendChild(settingsFlow);
@@ -777,16 +800,16 @@
     boardSelect.className = 'pinry-board-select';
     const noBoardOption = documentObject.createElement('option');
     noBoardOption.value = '';
-    noBoardOption.textContent = '보드 지정 안 함';
+    i18n.setText(noBoardOption, i18n.message('boardNone'));
     boardSelect.appendChild(noBoardOption);
     boardSelect.value = '';
-    appendField(documentObject, boardSettings, '보드 선택', boardSelect);
+    appendField(documentObject, boardSettings, i18n.message('boardSelectLabel'), boardSelect);
 
     const newBoardDetails = documentObject.createElement('details');
     newBoardDetails.className = 'pinry-new-board-details';
     newBoardDetails.open = true;
     const newBoardSummary = documentObject.createElement('summary');
-    newBoardSummary.textContent = '새 보드 만들기';
+    i18n.setText(newBoardSummary, i18n.message('boardNewSummary'));
     newBoardDetails.appendChild(newBoardSummary);
     boardSettings.appendChild(newBoardDetails);
 
@@ -794,7 +817,7 @@
     newBoardInput.id = 'pinry-new-board-name';
     newBoardInput.className = 'pinry-new-board-name';
     newBoardInput.type = 'text';
-    appendField(documentObject, newBoardDetails, '새 보드 이름', newBoardInput);
+    appendField(documentObject, newBoardDetails, i18n.message('boardNewNameLabel'), newBoardInput);
     const newBoardPrivate = documentObject.createElement('input');
     newBoardPrivate.id = 'pinry-new-board-private';
     newBoardPrivate.className = 'pinry-new-board-private';
@@ -802,12 +825,12 @@
     appendCheckboxField(
       documentObject,
       newBoardDetails,
-      '비공개 보드로 만들기',
+      i18n.message('boardNewPrivate'),
       newBoardPrivate,
     );
     const createBoardButton = createButton(
       documentObject,
-      '보드 만들기',
+      i18n.message('boardCreateButton'),
       'pinry-create-board',
     );
     newBoardDetails.appendChild(createBoardButton);
@@ -819,7 +842,7 @@
     appendCheckboxField(
       documentObject,
       settingsFlow,
-      '비공개 Pin으로 저장',
+      i18n.message('pinPrivate'),
       privateInput,
       'pinry-private-field',
     );
@@ -828,19 +851,19 @@
     details.className = 'pinry-details';
     details.open = false;
     const summary = documentObject.createElement('summary');
-    summary.textContent = '세부 정보';
+    i18n.setText(summary, i18n.message('detailsSummary'));
     details.appendChild(summary);
     const descriptionInput = documentObject.createElement('textarea');
     descriptionInput.id = 'pinry-description';
     descriptionInput.className = 'pinry-description-input';
     descriptionInput.value = pageDefaults.description || '';
-    appendField(documentObject, details, '설명', descriptionInput);
+    appendField(documentObject, details, i18n.message('descriptionLabel'), descriptionInput);
     const refererInput = documentObject.createElement('input');
     refererInput.id = 'pinry-referer';
     refererInput.className = 'pinry-referer-input';
     refererInput.type = 'url';
     refererInput.value = pageDefaults.referer || '';
-    appendField(documentObject, details, '원본 페이지 URL', refererInput);
+    appendField(documentObject, details, i18n.message('refererLabel'), refererInput);
     settingsFlow.appendChild(details);
 
     const tagsInput = documentObject.createElement('input');
@@ -850,7 +873,7 @@
     const tagsField = appendField(
       documentObject,
       settingsFlow,
-      '태그 (쉼표로 구분)',
+      i18n.message('tagsLabel'),
       tagsInput,
       'pinry-tags-field',
     );
@@ -870,19 +893,19 @@
     jobItems.setAttribute('aria-live', 'polite');
     const jobActions = documentObject.createElement('div');
     jobActions.className = 'pinry-job-actions';
-    const retryButton = createButton(documentObject, '작업 재시도', 'pinry-job-retry');
+    const retryButton = createButton(documentObject, i18n.message('jobRetryButton'), 'pinry-job-retry');
     retryButton.style.display = 'none';
-    const discardButton = createButton(documentObject, '작업 버리기', 'pinry-job-discard');
+    const discardButton = createButton(documentObject, i18n.message('jobDiscardButton'), 'pinry-job-discard');
     discardButton.style.display = 'none';
     const openOptionsButton = createButton(
       documentObject,
-      '설정 열기',
+      i18n.message('openOptionsButton'),
       'pinry-open-options',
     );
     openOptionsButton.style.display = 'none';
     const bootstrapRetryButton = createButton(
       documentObject,
-      '설정 다시 시도',
+      i18n.message('bootstrapRetryButton'),
       'pinry-bootstrap-retry',
     );
     bootstrapRetryButton.style.display = 'none';
@@ -908,11 +931,11 @@
     candidateHeader.className = 'pinry-candidate-header';
     const candidateTitle = documentObject.createElement('h2');
     candidateTitle.className = 'pinry-candidate-title';
-    candidateTitle.textContent = '이미지 후보';
+    i18n.setText(candidateTitle, i18n.message('candidateGridLabel'));
     const candidateSummary = documentObject.createElement('div');
     candidateSummary.className = 'pinry-candidate-summary';
     candidateSummary.setAttribute('aria-live', 'polite');
-    candidateSummary.textContent = '0개 발견 · 0개 선택';
+    i18n.setText(candidateSummary, i18n.message('candidateSummaryZero'));
     candidateHeader.appendChild(candidateTitle);
     candidateHeader.appendChild(candidateSummary);
     candidateCanvas.appendChild(candidateHeader);
@@ -921,13 +944,13 @@
     const loading = documentObject.createElement('div');
     loading.className = 'pinry-loading';
     loading.setAttribute('aria-live', 'polite');
-    loading.textContent = '이미지 후보를 찾는 중입니다.';
+    i18n.setText(loading, i18n.message('candidateLoading'));
     candidateCanvas.appendChild(loading);
     const grid = documentObject.createElement('div');
     grid.className = 'pinry-candidate-grid';
     grid.setAttribute('role', 'listbox');
     grid.setAttribute('aria-multiselectable', 'true');
-    grid.setAttribute('aria-label', '이미지 후보');
+    i18n.setAttribute(grid, 'aria-label', i18n.message('candidateGridLabel'));
     grid.setAttribute('aria-live', 'polite');
     candidateCanvas.appendChild(grid);
     mountRoot.appendChild(overlay);
@@ -983,16 +1006,18 @@
       const state = event.status === 'connected' ? 'connected'
         : event.status === 'reconnecting' ? 'reconnecting' : 'terminal';
       transportStatusElement.setAttribute('data-state', state);
-      transportStatusElement.textContent = state === 'connected' ? '연결됨'
-        : state === 'reconnecting' ? '재연결 중…'
-          : userMessageForCode(event.code || 'overlay_connection_lost');
+      i18n.setText(transportStatusElement, state === 'connected' ? i18n.message('transportConnected')
+        : state === 'reconnecting' ? i18n.message('transportReconnecting')
+          : userMessageForCode(event.code || 'overlay_connection_lost'));
     }
 
     function isTransientTransportFailure(code) {
       return code === 'overlay_connection_lost' && transportStatus === 'reconnecting';
     }
 
-    const cleanupCallbacks = [];
+    const cleanupCallbacks = [i18n.watch(options.mountRoot), i18n.subscribe(() => {
+      if (renderedJob) renderJob(renderedJob);
+    })];
     function listen(target, type, listener) {
       target.addEventListener(type, listener);
       cleanupCallbacks.push(() => target.removeEventListener(type, listener));
@@ -1132,21 +1157,21 @@
       for (const checkbox of controller.checkboxes) {
         const selected = selectedIds.has(checkbox.getAttribute('data-candidate-id'));
         checkbox.checked = selected;
-        checkbox.textContent = selected ? '✓' : '';
+        i18n.setText(checkbox, selected ? '✓' : '');
       }
       const count = selectedIds.size;
-      selectionCount.textContent = `${count}개 선택`;
-      candidateSummary.textContent = `${candidateTotal}개 발견 · ${count}개 선택`;
+      i18n.setText(selectionCount, i18n.message('overlaySelectionCount', { count }));
+      i18n.setText(candidateSummary, i18n.message('candidateSummary', { found: candidateTotal, selected: count }));
       const submitText = count > 0
-        ? `선택한 ${count}개 Pin 만들기`
-        : '선택한 Pin 만들기';
+        ? i18n.message('overlaySubmitPinCount', { count })
+        : i18n.message('overlaySubmitPin');
       const submitDisabled = count === 0 || !bootstrapReady
         || submissionInFlight || createBoardInFlight || currentBatchId !== null
         || transportStatus !== 'connected';
-      toolbarSubmit.setAttribute('aria-label', submitText);
-      toolbarSubmit.textContent = submitText;
+      i18n.setAttribute(toolbarSubmit, 'aria-label', submitText);
+      i18n.setText(toolbarSubmit, submitText);
       toolbarSubmit.disabled = submitDisabled;
-      submit.textContent = submitText;
+      i18n.setText(submit, submitText);
       submit.disabled = submitDisabled;
       createBoardButton.disabled = !bootstrapReady || createBoardInFlight
         || submissionInFlight || currentBatchId !== null || transportStatus !== 'connected';
@@ -1175,7 +1200,7 @@
       if (viewPinsButton) return;
       viewPinsButton = createButton(
         documentObject,
-        '생성한 Pin 보기',
+        i18n.message('viewCreatedPins'),
         'pinry-view-created-pins',
       );
       listen(viewPinsButton, 'click', (event) => {
@@ -1190,10 +1215,9 @@
         || !Array.isArray(job.items)) return;
       renderedJob = job;
       const userSummary = summarizeJobForUser(job);
-      jobStatus.textContent = userSummary.final
-        ? `성공 ${userSummary.success}개 · 실패 ${userSummary.failed}개`
-        : `성공 ${userSummary.success}개 · 처리 중 ${userSummary.pending}개`
-          + ` · 재시도 필요 ${userSummary.retryNeeded}개`;
+      i18n.setText(jobStatus, userSummary.final
+        ? i18n.message('jobSummaryFinal', userSummary)
+        : i18n.message('jobSummaryProgress', userSummary));
       while (jobItems.children.length > 0) jobItems.removeChild(jobItems.children[0]);
       job.items.forEach((item, index) => {
         const status = documentObject.createElement('div');
@@ -1204,7 +1228,7 @@
         const errorMessage = item && item.error && typeof item.error.code === 'string'
           && /^[a-z0-9_]{1,64}$/.test(item.error.code)
           ? ` · ${userMessageForCode(item.error.code)}` : '';
-        status.textContent = `${index + 1}. ${ITEM_STATUS_LABELS[statusCode]}${errorMessage}`;
+        i18n.setText(status, `${index + 1}. ${ITEM_STATUS_LABELS[statusCode]}${errorMessage}`);
         jobItems.appendChild(status);
       });
       retryButton.style.display = job.job_state === 'paused' ? '' : 'none';
@@ -1220,14 +1244,14 @@
       if (!isCurrent() || currentBatchId !== batchId) return;
       if (isTransientTransportFailure(code)) return;
       stopPolling();
-      jobStatus.textContent = userMessageForCode(code);
+      i18n.setText(jobStatus, userMessageForCode(code));
       currentBatchId = null;
       renderedJob = null;
       syncCreatedPinsButton();
       bootstrapReady = false;
       retryButton.style.display = 'none';
       discardButton.style.display = 'none';
-      bootstrapRetryButton.textContent = '작업 복구';
+      i18n.setText(bootstrapRetryButton, i18n.message('jobRecoveryButton'));
       bootstrapRetryButton.style.display = '';
       updateSelection();
     }
@@ -1268,7 +1292,7 @@
       if (candidates.length === 0) return;
       submissionInFlight = true;
       updateSelection();
-      jobStatus.textContent = userMessageForCode('creating');
+      i18n.setText(jobStatus, userMessageForCode('creating'));
       try {
         const response = await request({
           type: 'pinry:create-job',
@@ -1288,7 +1312,7 @@
         if (!response || !response.ok || typeof response.batch_id !== 'string') {
           const code = response && response.code ? response.code : 'job_create_failed';
           if (isTransientTransportFailure(code)) return;
-          jobStatus.textContent = userMessageForCode(code);
+          i18n.setText(jobStatus, userMessageForCode(code));
           if (code === 'job_already_exists') {
             bootstrapReady = false;
             updateSelection();
@@ -1304,7 +1328,7 @@
         currentBatchId = response.batch_id;
         await refreshJob();
       } catch (_error) {
-        if (isCurrent()) jobStatus.textContent = userMessageForCode('job_create_failed');
+        if (isCurrent()) i18n.setText(jobStatus, userMessageForCode('job_create_failed'));
       } finally {
         submissionInFlight = false;
         if (isCurrent()) updateSelection();
@@ -1316,7 +1340,7 @@
         || submissionInFlight || currentBatchId !== null || transportStatus !== 'connected') return;
       const name = formState.newBoardName.trim();
       if (name.length === 0) {
-        jobStatus.textContent = userMessageForCode('invalid_board_request');
+        i18n.setText(jobStatus, userMessageForCode('invalid_board_request'));
         return;
       }
       createBoardInFlight = true;
@@ -1341,17 +1365,17 @@
           && Number.isSafeInteger(board.id) && board.id > 0
           && typeof board.name === 'string') {
           appendBoardOption(board, { selected: true });
-          jobStatus.textContent = '보드를 만들었습니다.';
+          i18n.setText(jobStatus, i18n.message('boardCreated'));
           return;
         }
         const code = response && typeof response.code === 'string'
           ? response.code : 'board_create_failed';
         if (isTransientTransportFailure(code)) return;
-        jobStatus.textContent = userMessageForCode(code);
+        i18n.setText(jobStatus, userMessageForCode(code));
         await loadBootstrap();
       } catch (_error) {
         if (!isCurrent()) return;
-        jobStatus.textContent = userMessageForCode('network_error');
+        i18n.setText(jobStatus, userMessageForCode('network_error'));
         await loadBootstrap();
       } finally {
         createBoardInFlight = false;
@@ -1374,7 +1398,7 @@
       if (result.truncated) {
         const limitMessage = documentObject.createElement('div');
         limitMessage.className = 'pinry-limit-message';
-        limitMessage.textContent = '이미지 후보가 많아 처음 500개만 표시합니다.';
+        i18n.setText(limitMessage, i18n.message('candidateLimitMessage'));
         candidateCanvas.appendChild(limitMessage);
       }
 
@@ -1384,9 +1408,7 @@
         tile.setAttribute('data-candidate-id', candidate.id);
         tile.setAttribute('role', 'option');
         tile.setAttribute('aria-selected', 'false');
-        tile.setAttribute(
-          'aria-label',
-          `이미지 ${index + 1}, ${candidate.width}×${candidate.height}`,
+        i18n.setAttribute(tile, 'aria-label', i18n.message('candidateAriaLabel', { index: index + 1, width: candidate.width, height: candidate.height }),
         );
         tile.tabIndex = 0;
         tile.setAttribute('tabindex', '0');
@@ -1403,7 +1425,7 @@
 
         const number = documentObject.createElement('span');
         number.className = 'pinry-candidate-number';
-        number.textContent = String(index + 1);
+        i18n.setText(number, String(index + 1));
         tile.appendChild(number);
 
         const checkbox = documentObject.createElement('span');
@@ -1417,7 +1439,7 @@
         function appendPreviewPlaceholder(message) {
           const placeholder = documentObject.createElement('div');
           placeholder.className = 'pinry-preview-placeholder';
-          placeholder.textContent = message;
+          i18n.setText(placeholder, message);
           tile.appendChild(placeholder);
         }
         if (typeof candidate.url === 'string' && candidate.url.startsWith('https://')) {
@@ -1429,16 +1451,16 @@
           image.onerror = () => {
             if (!isCurrent()) return;
             if (image.parentNode) image.parentNode.removeChild(image);
-            appendPreviewPlaceholder('미리보기를 불러오지 못했습니다.');
+            appendPreviewPlaceholder(i18n.message('candidatePreviewFailed'));
           };
           tile.appendChild(image);
         } else {
-          appendPreviewPlaceholder('HTTP 미리보기');
+          appendPreviewPlaceholder(i18n.message('candidateHttpPreview'));
         }
 
         const dimensions = documentObject.createElement('div');
         dimensions.className = 'pinry-candidate-dimensions';
-        dimensions.textContent = `${candidate.width}\u00d7${candidate.height}`;
+        i18n.setText(dimensions, `${candidate.width}\u00d7${candidate.height}`);
         tile.appendChild(dimensions);
         grid.appendChild(tile);
         controller.cards.push(tile);
@@ -1449,7 +1471,7 @@
 
     function renderFailure() {
       if (!isCurrent()) return;
-      loading.textContent = '이미지 후보를 찾지 못했습니다.';
+      i18n.setText(loading, i18n.message('candidateNotFound'));
       if (typeof closeButton.focus === 'function') closeButton.focus();
     }
 
@@ -1535,7 +1557,7 @@
         });
         if (isCurrent() && currentBatchId === batchId) await refreshJob();
       } catch (_error) {
-        if (isCurrent()) jobStatus.textContent = userMessageForCode('job_retry_failed');
+        if (isCurrent()) i18n.setText(jobStatus, userMessageForCode('job_retry_failed'));
       } finally {
         jobMutationInFlight = false;
         if (isCurrent()) updateJobMutationControls();
@@ -1546,7 +1568,7 @@
         || !currentBatchId || !isCurrent() || jobMutationInFlight
         || transportStatus !== 'connected'
         || typeof scope.confirm !== 'function'
-        || !scope.confirm('이 작업을 버릴까요?')) return;
+        || !scope.confirm(i18n.t('discardConfirm'))) return;
       const batchId = currentBatchId;
       jobMutationInFlight = true;
       updateJobMutationControls();
@@ -1560,7 +1582,7 @@
         if (!response || response.ok !== true) {
           const code = response && response.code ? response.code : 'job_discard_failed';
           if (isTransientTransportFailure(code)) return;
-          jobStatus.textContent = userMessageForCode(code);
+          i18n.setText(jobStatus, userMessageForCode(code));
           schedulePoll();
           return;
         }
@@ -1568,14 +1590,14 @@
         currentBatchId = null;
         renderedJob = null;
         syncCreatedPinsButton();
-        jobStatus.textContent = userMessageForCode('discarded');
+        i18n.setText(jobStatus, userMessageForCode('discarded'));
         while (jobItems.children.length > 0) jobItems.removeChild(jobItems.children[0]);
         retryButton.style.display = 'none';
         discardButton.style.display = 'none';
         updateSelection();
       } catch (_error) {
         if (isCurrent() && currentBatchId === batchId) {
-          jobStatus.textContent = userMessageForCode('job_discard_failed');
+          i18n.setText(jobStatus, userMessageForCode('job_discard_failed'));
           schedulePoll();
         }
       } finally {
@@ -1588,7 +1610,7 @@
       try {
         await request({ type: 'pinry:open-options' });
       } catch (_error) {
-        if (isCurrent()) jobStatus.textContent = userMessageForCode('open_options_failed');
+        if (isCurrent()) i18n.setText(jobStatus, userMessageForCode('open_options_failed'));
       }
     });
     listen(bootstrapRetryButton, 'click', (event) => {
@@ -1661,7 +1683,7 @@
       activeBootstrap = null;
       syncCreatedPinsButton();
       bootstrapReady = false;
-      jobStatus.textContent = userMessageForCode(code);
+      i18n.setText(jobStatus, userMessageForCode(code));
       openOptionsButton.style.display = '';
       bootstrapRetryButton.style.display = '';
       updateSelection();
@@ -1676,7 +1698,7 @@
         option.value = value;
         boardSelect.appendChild(option);
       }
-      option.textContent = board.name;
+      i18n.setText(option, board.name);
       availableBoardValues.add(value);
       if (selected) {
         formState.boardValue = value;
@@ -1748,7 +1770,7 @@
       syncCreatedPinsButton();
       bootstrapReady = true;
       openOptionsButton.style.display = 'none';
-      bootstrapRetryButton.textContent = '설정 다시 시도';
+      i18n.setText(bootstrapRetryButton, i18n.message('bootstrapRetryButton'));
       bootstrapRetryButton.style.display = 'none';
       while (boardSelect.children.length > 0) {
         boardSelect.removeChild(boardSelect.children[0]);
@@ -1756,7 +1778,7 @@
       availableBoardValues = new Set();
       const sentinel = documentObject.createElement('option');
       sentinel.value = '';
-      sentinel.textContent = '보드 지정 안 함';
+      i18n.setText(sentinel, i18n.message('boardNone'));
       boardSelect.appendChild(sentinel);
       bootstrap.boards.forEach((board) => appendBoardOption(board));
       formState.boardValue = availableBoardValues.has(previousBoard) ? previousBoard : '';

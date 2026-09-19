@@ -181,7 +181,7 @@
     const style = documentObject.createElement('style');
     style.textContent = HOST_STYLE;
     const frame = documentObject.createElement('iframe');
-    frame.title = 'SVRx Pinry 이미지 선택';
+    frame.title = 'SVRx Pinry';
     frame.src = frameUrl;
     shadow.appendChild(style);
     shadow.appendChild(frame);

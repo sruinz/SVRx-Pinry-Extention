@@ -1,6 +1,9 @@
 (function loadBackground(root, factory) {
   if (typeof importScripts === 'function' && !root.PinryOrigin) importScripts('origin.js');
   if (typeof importScripts === 'function' && !root.PinryJobs) importScripts('jobs.js');
+  if (typeof importScripts === 'function' && !root.PinryI18n) {
+    importScripts('translations.js', 'i18n.js');
+  }
 
   let originApi = root.PinryOrigin;
   let jobsApi = root.PinryJobs;
@@ -13,11 +16,13 @@
   if (!originApi) throw new Error('origin_module_unavailable');
   if (!jobsApi) throw new Error('jobs_module_unavailable');
 
-  const api = factory(root, originApi, jobsApi);
+  const i18n = typeof module === 'object' && module.exports
+    ? require('./i18n.js') : root.PinryI18n;
+  const api = factory(root, originApi, jobsApi, i18n);
   root.PinryBackground = api;
   if (typeof module === 'object' && module.exports) module.exports = api;
   if (root.chrome) api.registerBackground(root.chrome);
-}(globalThis, function buildBackgroundApi(root, originApi, jobsApi) {
+}(globalThis, function buildBackgroundApi(root, originApi, jobsApi, i18n) {
   'use strict';
 
   const ACTIVE_KEY = 'pinry.server';
@@ -3185,13 +3190,20 @@
     ).then(() => true);
   }
 
+  let menuRevision = 0;
   function updateContextMenu(chromeApi) {
-    chromeApi.storage.local.get('contextMenu', (stored) => {
+    const revision = ++menuRevision;
+    chromeApi.storage.local.get(['contextMenu', 'extensionLocale'], (stored) => {
+      if (chromeApi.runtime.lastError || revision !== menuRevision) return;
+      const preference = stored && stored.extensionLocale;
+      i18n.setLocale(['ko', 'en', 'zh', 'fr'].includes(preference)
+        ? preference : chromeApi.i18n?.getUILanguage() || root.navigator?.language);
       chromeApi.contextMenus.removeAll(() => {
+        if (chromeApi.runtime.lastError || revision !== menuRevision) return;
         if (!stored || stored.contextMenu !== false) {
           chromeApi.contextMenus.create({
             id: 'addToPinry',
-            title: 'SVRx Pinry에 이미지 추가',
+            title: i18n.t('contextMenuTitle'),
             contexts: ['page', 'selection', 'link', 'editable', 'image', 'video', 'audio'],
           });
         }
@@ -3231,7 +3243,9 @@
     }
     if (chromeApi.storage.onChanged) {
       chromeApi.storage.onChanged.addListener((changes, areaName) => {
-        if (areaName === 'local' && changes.contextMenu) updateContextMenu(chromeApi);
+        if (areaName === 'local' && (changes.contextMenu || changes.extensionLocale)) {
+          updateContextMenu(chromeApi);
+        }
       });
     }
     updateContextMenu(chromeApi);

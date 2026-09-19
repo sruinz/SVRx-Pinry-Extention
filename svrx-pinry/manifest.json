@@ -1,7 +1,7 @@
 {
-  "name": "SVRx Pinry",
-  "version": "0.1.0",
-  "description": "SVRx Pinry 서버에 현재 페이지의 이미지를 Pin으로 저장합니다.",
+  "name": "__MSG_extName__",
+  "version": "0.1.1",
+  "description": "__MSG_extDescription__",
   "manifest_version": 3,
   "minimum_chrome_version": "121",
   "icons": {
@@ -51,5 +51,6 @@
   "options_ui": {
     "page": "options.html",
     "open_in_tab": false
-  }
+  },
+  "default_locale": "en"
 }

@@ -5,11 +5,13 @@
   }
   if (!originApi) throw new Error('origin_module_unavailable');
 
-  const api = factory(root, originApi);
+  const i18n = typeof module === 'object' && module.exports
+    ? require('./i18n.js') : root.PinryI18n;
+  const api = factory(root, originApi, i18n);
   root.PinryOptions = api;
   if (typeof module === 'object' && module.exports) module.exports = api;
   if (root.document && root.chrome) api.initializeOptions(root);
-}(globalThis, function buildOptionsApi(root, originApi) {
+}(globalThis, function buildOptionsApi(root, originApi, i18n) {
   'use strict';
 
   const PENDING_KEY = 'pinry.server.pending';
@@ -34,26 +36,26 @@
   }
 
   const STATUS_MESSAGES = Object.freeze({
-    saved: '서버 인증 정보를 확인했습니다.',
-    revalidated: '연결 상태를 다시 확인했습니다.',
-    deleting: '인증 정보를 삭제하는 중입니다.',
-    deleted: '인증 정보를 삭제했습니다.',
-    invalid_server_origin: '서버 주소를 확인하세요.',
-    invalid_token: 'API token을 입력하세요.',
-    insecure_http_confirmation_required: 'HTTP 평문 전송 동의가 필요합니다.',
-    host_permission_denied: '서버 접근 권한이 필요합니다.',
-    host_permission_required: '저장된 서버 접근 권한을 확인하세요.',
-    server_identity_changed: '저장된 사용자와 서버의 사용자가 일치하지 않습니다.',
-    server_configuration_changed: '서버 설정이 변경되었습니다. 다시 확인하세요.',
-    network_error: '서버에 연결하지 못했습니다.',
-    profile_request_failed: '서버 프로필을 확인하지 못했습니다.',
-    invalid_profile_response: '서버 응답을 확인하지 못했습니다.',
-    token_mismatch: 'API token이 서버 사용자와 일치하지 않습니다.',
-    pending_storage_failed: '인증 정보를 임시 저장하지 못했습니다.',
-    permission_rollback_failed: '서버 접근 권한을 정리하지 못했습니다.',
-    webextension_api_error: '브라우저 기능을 사용할 수 없습니다.',
-    attempt_id_unavailable: '안전한 인증 시도를 시작하지 못했습니다.',
-    server_validation_failed: '서버 인증을 확인하지 못했습니다.',
+    saved: i18n.message('statusSaved'),
+    revalidated: i18n.message('statusRevalidated'),
+    deleting: i18n.message('statusDeleting'),
+    deleted: i18n.message('statusDeleted'),
+    invalid_server_origin: i18n.message('statusInvalidServerOrigin'),
+    invalid_token: i18n.message('statusInvalidToken'),
+    insecure_http_confirmation_required: i18n.message('statusInsecureHttpRequired'),
+    host_permission_denied: i18n.message('statusHostPermissionDenied'),
+    host_permission_required: i18n.message('statusHostPermissionRequired'),
+    server_identity_changed: i18n.message('statusServerIdentityChanged'),
+    server_configuration_changed: i18n.message('statusServerConfigChanged'),
+    network_error: i18n.message('msgNetworkError'),
+    profile_request_failed: i18n.message('statusProfileRequestFailed'),
+    invalid_profile_response: i18n.message('msgInvalidServerResponse'),
+    token_mismatch: i18n.message('statusTokenMismatch'),
+    pending_storage_failed: i18n.message('statusPendingStorageFailed'),
+    permission_rollback_failed: i18n.message('statusPermissionRollbackFailed'),
+    webextension_api_error: i18n.message('statusWebextensionApiError'),
+    attempt_id_unavailable: i18n.message('statusAttemptIdUnavailable'),
+    server_validation_failed: i18n.message('statusServerValidationFailed'),
   });
 
   function normalizeServerState(state) {
@@ -122,29 +124,29 @@
   function renderServerState(elements, state) {
     elements.serverState.dataset.phase = state.phase;
     if (state.phase === 'loading') {
-      elements.serverConnectionStatus.textContent = '상태 확인 중';
+      i18n.setText(elements.serverConnectionStatus, i18n.message('stateLoading'));
       return;
     }
     if (state.phase === 'unavailable') {
-      elements.serverConnectionStatus.textContent = '상태 확인 불가';
+      i18n.setText(elements.serverConnectionStatus, i18n.message('stateUnavailable'));
       return;
     }
 
     if (!state.configured) {
-      elements.serverConnectionStatus.textContent = '연결되지 않음';
-      elements.serverOrigin.textContent = '';
-      elements.serverUsername.textContent = '';
-      elements.serverPermission.textContent = '';
-      elements.serverTokenState.textContent = '저장된 API 토큰 없음';
+      i18n.setText(elements.serverConnectionStatus, i18n.message('stateNotConnected'));
+      i18n.setText(elements.serverOrigin, '');
+      i18n.setText(elements.serverUsername, '');
+      i18n.setText(elements.serverPermission, '');
+      i18n.setText(elements.serverTokenState, i18n.message('stateNoToken'));
       return;
     }
 
-    elements.serverConnectionStatus.textContent = '연결 정보 저장됨';
-    elements.serverOrigin.textContent = `서버: ${state.origin}`;
-    elements.serverUsername.textContent = `사용자: ${state.username}`;
-    elements.serverPermission.textContent = state.hasPermission
-      ? '서버 접근 권한 있음' : '서버 접근 권한 없음';
-    elements.serverTokenState.textContent = 'API 토큰 저장됨';
+    i18n.setText(elements.serverConnectionStatus, i18n.message('stateConnected'));
+    i18n.setText(elements.serverOrigin, i18n.message('stateServerPrefix', { origin: state.origin }));
+    i18n.setText(elements.serverUsername, i18n.message('stateUserPrefix', { username: state.username }));
+    i18n.setText(elements.serverPermission, state.hasPermission
+      ? i18n.message('statePermissionGranted') : i18n.message('statePermissionDenied'));
+    i18n.setText(elements.serverTokenState, i18n.message('stateTokenSaved'));
   }
 
   function updateSaveEligibility(originInput, tokenInput, submitButton) {
@@ -244,6 +246,32 @@
     const tokenError = document.getElementById('pinryTokenError');
     const insecureConsent = document.getElementById('allowInsecureHttp');
     const contextMenu = document.getElementById('contextMenu');
+    const language = document.getElementById('extensionLocale');
+    if (language) {
+      let savedPreference = '';
+      let languageChanged = false;
+      chrome.storage.local.get('extensionLocale', (stored) => {
+        const failed = chrome.runtime.lastError;
+        if (languageChanged) return;
+        savedPreference = !failed && ['ko', 'en', 'zh', 'fr'].includes(stored?.extensionLocale)
+          ? stored.extensionLocale : '';
+        language.value = savedPreference;
+      });
+      language.addEventListener('change', async () => {
+        languageChanged = true;
+        const preference = language.value;
+        language.disabled = true;
+        try {
+          await originApi.callWebExtension(chrome.storage.local.set, chrome.storage.local,
+            [{ extensionLocale: preference }], chrome.runtime);
+          savedPreference = preference;
+          i18n.setLocale(preference || chrome.i18n?.getUILanguage() || scope.navigator?.language);
+        } catch (_error) {
+          language.value = savedPreference;
+          i18n.setText(status, i18n.message('optionsLanguageSaveFailed'));
+        } finally { language.disabled = false; }
+      });
+    }
     const submitButton = document.getElementById('saveServerSettings');
     const deleteButton = document.getElementById('deleteCredentials');
     const deleteConfirmation = document.getElementById('deleteCredentialsConfirmation');
@@ -302,7 +330,7 @@
     function hideDeleteConfirmation(restoreFocus = false) {
       deleteConfirmationVisible = false;
       deleteConfirmation.hidden = true;
-      deleteQuestion.textContent = '';
+      i18n.setText(deleteQuestion, '');
       deleteButton.setAttribute('aria-expanded', 'false');
       updateControls();
       if (restoreFocus && !deleteButton.disabled) deleteButton.focus();
@@ -314,9 +342,9 @@
         || viewState.phase !== 'ready'
         || !viewState.configured) return;
       const savedOrigin = viewState.origin;
-      deleteQuestion.textContent = savedOrigin
-        ? `${savedOrigin} 연결과 저장된 인증 정보를 삭제하시겠습니까?`
-        : '저장된 연결과 인증 정보를 삭제하시겠습니까?';
+      i18n.setText(deleteQuestion, savedOrigin
+        ? i18n.message('deleteConfirmWithOrigin', { origin: savedOrigin })
+        : i18n.message('deleteConfirmGeneric'));
       deleteConfirmationVisible = true;
       deleteConfirmation.hidden = false;
       deleteButton.setAttribute('aria-expanded', 'true');
@@ -327,20 +355,20 @@
     updateControls();
 
     function setStatus(code) {
-      status.textContent = Object.hasOwn(STATUS_MESSAGES, code)
-        ? STATUS_MESSAGES[code] : STATUS_MESSAGES.server_validation_failed;
+      i18n.setText(status, Object.hasOwn(STATUS_MESSAGES, code)
+        ? STATUS_MESSAGES[code] : STATUS_MESSAGES.server_validation_failed);
     }
 
     function setFieldError(input, errorElement, message) {
       input.setAttribute('aria-invalid', 'true');
       input.setAttribute('aria-describedby', errorElement.id);
-      errorElement.textContent = message;
+      i18n.setText(errorElement, message);
     }
 
     function clearFieldError(input, errorElement) {
       input.removeAttribute('aria-invalid');
       input.removeAttribute('aria-describedby');
-      errorElement.textContent = '';
+      i18n.setText(errorElement, '');
     }
 
     function showReady(state) {
